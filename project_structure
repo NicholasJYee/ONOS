@@ -1,0 +1,18 @@
+medical_scribe/
+├── app/
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── audio_service.py
+│   │   ├── transcription_service.py
+│   │   └── note_generation_service.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── note.py
+│   └── templates/
+│       ├── base.html
+│       └── index.html
+├── config.py
+├── requirements.txt
+└── run.py 

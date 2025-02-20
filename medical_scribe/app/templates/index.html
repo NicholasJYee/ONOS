@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Record Conversation</h5>
+                <div class="d-flex flex-column gap-2">
+                    <canvas id="visualizer" height="60"></canvas>
+                    <div class="btn-group">
+                        <button id="startRecord" class="btn btn-primary">Start Recording</button>
+                        <button id="pauseRecord" class="btn btn-warning" disabled>Pause</button>
+                        <button id="stopRecord" class="btn btn-danger" disabled>Stop</button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div id="timer" class="text-muted"></div>
+                        <div id="maxDuration" class="text-muted">Max: 15:00</div>
+                    </div>
+                    <div id="recordingStatus" class="text-muted"></div>
+                    
+                    <div id="previewControls" class="d-none">
+                        <h6 class="mt-3">Preview Recording</h6>
+                        <audio id="audioPreview" controls class="w-100"></audio>
+                        <button id="processAudio" class="btn btn-success mt-2">Process Recording</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Generated Note</h5>
+                <div id="noteOutput" class="border p-3 bg-light">
+                    Note will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let startTime;
+let timerInterval;
+let audioContext;
+let analyser;
+let visualizerCanvas;
+let canvasCtx;
+let audioBlob;
+const MAX_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+function setupVisualizer(stream) {
+    audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    
+    visualizerCanvas = document.getElementById('visualizer');
+    canvasCtx = visualizerCanvas.getContext('2d');
+    
+    function draw() {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+        
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(dataArray);
+        
+        const width = visualizerCanvas.width;
+        const height = visualizerCanvas.height;
+        
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0, 0, width, height);
+        
+        const barWidth = (width / bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+        
+        for(let i = 0; i < bufferLength; i++) {
+            barHeight = dataArray[i] / 2;
+            canvasCtx.fillStyle = `rgb(50, ${barHeight + 100}, 50)`;
+            canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+            x += barWidth + 1;
+        }
+        
+        requestAnimationFrame(draw);
+    }
+    
+    draw();
+}
+
+function updateTimer() {
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= MAX_DURATION) {
+        stopRecording();
+        return;
+    }
+    
+    const seconds = Math.floor(elapsed / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    document.getElementById('timer').textContent = 
+        `Recording: ${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        clearInterval(timerInterval);
+        
+        document.getElementById('startRecord').disabled = false;
+        document.getElementById('pauseRecord').disabled = true;
+        document.getElementById('stopRecord').disabled = true;
+        document.getElementById('timer').textContent = '';
+        document.getElementById('recordingStatus').textContent = '';
+        
+        if (audioContext) {
+            audioContext.close();
+        }
+    }
+}
+
+async function processRecording() {
+    document.getElementById('recordingStatus').textContent = 'Processing...';
+    document.getElementById('processAudio').disabled = true;
+    
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.wav');
+    
+    try {
+        const response = await fetch('/process-audio', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            document.getElementById('noteOutput').innerText = data.note;
+            document.getElementById('previewControls').classList.add('d-none');
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        alert('An error occurred while processing the audio');
+    } finally {
+        document.getElementById('recordingStatus').textContent = '';
+        document.getElementById('processAudio').disabled = false;
+    }
+}
+
+document.getElementById('startRecord').addEventListener('click', async () => {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        setupVisualizer(stream);
+        
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+            audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audioPreview = document.getElementById('audioPreview');
+            audioPreview.src = audioUrl;
+            document.getElementById('previewControls').classList.remove('d-none');
+        };
+        
+        mediaRecorder.start(1000); // Collect data every second
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        
+        document.getElementById('startRecord').disabled = true;
+        document.getElementById('pauseRecord').disabled = false;
+        document.getElementById('stopRecord').disabled = false;
+        document.getElementById('recordingStatus').textContent = 'Recording...';
+        document.getElementById('previewControls').classList.add('d-none');
+        
+    } catch (error) {
+        alert('Error accessing microphone: ' + error);
+    }
+});
+
+document.getElementById('pauseRecord').addEventListener('click', () => {
+    if (mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        document.getElementById('pauseRecord').textContent = 'Resume';
+        document.getElementById('recordingStatus').textContent = 'Paused';
+        clearInterval(timerInterval);
+    } else if (mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        document.getElementById('pauseRecord').textContent = 'Pause';
+        document.getElementById('recordingStatus').textContent = 'Recording...';
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+});
+
+document.getElementById('stopRecord').addEventListener('click', stopRecording);
+document.getElementById('processAudio').addEventListener('click', processRecording);
+</script>
+{% endblock %} 

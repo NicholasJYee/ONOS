@@ -1,0 +1,8 @@
+flask
+python-dotenv
+openai
+werkzeug
+torch
+git+https://github.com/openai/whisper.git
+numpy
+ffmpeg-python 
