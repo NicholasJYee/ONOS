@@ -14,7 +14,7 @@ def process_markdown(text: str) -> str:
     # Convert markdown to HTML
     html = markdown.markdown(text)
     # Replace some HTML tags with reportlab-compatible tags
-    html = html.replace('<strong>', '<b>').replace('</strong>', '</b>')
+    html = html.replace('<strong>', '<br/><b>').replace('</strong>', '</b><br/>')
     html = html.replace('<em>', '<i>').replace('</em>', '</i>')
     return html
 
@@ -104,7 +104,7 @@ def create_pdf(output_path: str, transcription: str, soap_notes: list[tuple[str,
             row = []
             for i, (model, note) in enumerate(soap_notes):
                 cell_content = Paragraph(
-                    f"<b>{model}</b><br/>{note}", # Removed extra line break
+                    f"<br/><b>{model}</b><br/><br/>{note}",  # Added line break before model name
                     normal_style
                 )
                 row.append(cell_content)
