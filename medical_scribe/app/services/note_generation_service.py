@@ -8,7 +8,7 @@ class NoteGenerationService:
                 messages=[
                     {
                         'role': 'system',
-                        'content': "You are a medical scribe assistant. Convert the following doctor-patient conversation into a structured medical note following standard SOAP format (don't include any pre-amble)."
+                        'content': "You are a medical scribe assistant. Convert the following doctor-patient conversation into a structured medical note following standard Subjective, Objective, Assessment, and Plan (SOAP) format (don't include any pre-amble)."
                     },
                     {
                         'role': 'user',

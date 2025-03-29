@@ -1,0 +1,138 @@
+import os
+import re
+import pandas as pd
+from pathlib import Path
+import json
+from typing import Dict, List, Tuple
+from ollama import Client
+
+SYSTEM_PROMPT = """Please act as an impartial judge and evaluate the quality of a clinical Subjective, Objective, Assessment, Plan (SOAP) note provided by an AI assistant. Your evaluation must objectively assess the note using these four metrics: **clinical accuracy**, **completeness**, **conciseness**, and **clarity**.
+
+Use the following criteria to assign numeric ratings (0–5) to each metric:
+
+### Clinical Accuracy:
+- **5:** Perfect clinical accuracy; no inaccuracies.
+- **4:** Minor inaccuracies of no clinical consequence.
+- **3:** Moderate inaccuracies, minor impact on clinical interpretation.
+- **2:** Noticeable inaccuracies, potentially misleading clinically.
+- **1:** Significant inaccuracies, substantially compromising clinical validity.
+- **0:** Severe inaccuracies, completely misrepresenting clinical information.
+
+### Completeness:
+- **5:** Includes all clinically relevant information.
+- **4:** Nearly complete, minor omissions of limited clinical importance.
+- **3:** Moderately complete, some omissions of moderate clinical importance.
+- **2:** Limited completeness, important clinical information omitted.
+- **1:** Minimally complete, critical clinical information omitted.
+- **0:** Essential clinical information entirely absent.
+
+### Conciseness:
+- **5:** Precisely summarized, essential points conveyed without redundancy.
+- **4:** Mostly concise, minimal unnecessary information included.
+- **3:** Moderately concise, some redundant or irrelevant details.
+- **2:** Limited conciseness, significant redundancy or extraneous information.
+- **1:** Poorly concise, predominantly redundant or irrelevant.
+- **0:** Not concise, largely irrelevant, or severely redundant.
+
+### Clarity:
+- **5:** Highly clear, easily readable, logically organized.
+- **4:** Mostly clear, minor readability or organizational issues.
+- **3:** Moderately clear, occasional confusion due to language or organization.
+- **2:** Limited clarity, substantial confusion from readability or organization.
+- **1:** Poorly clear, difficult to interpret, significantly unclear.
+- **0:** Completely unclear, unreadable, severely disorganized.
+
+### **Hallucination Detection:**
+Clearly state if the note contains hallucinated information—clinical details or statements that are not clinically appropriate or accurate, potentially misleading the clinical interpretation or patient management.
+
+Begin your evaluation with a concise explanation that explicitly references any discrepancies, hallucinations, or strengths observed in the note. Clearly state numeric ratings and indicate hallucinations (if any) using this format:
+
+Clinical Accuracy: [[X]]
+Completeness: [[X]]
+Conciseness: [[X]]
+Clarity: [[X]]
+Hallucination: [[Yes/No]]"""
+
+def extract_ratings(response: str) -> Dict[str, float]:
+    """Extract ratings from the LLM response."""
+    ratings = {}
+    
+    # Extract numeric ratings
+    for metric in ['Clinical Accuracy', 'Completeness', 'Conciseness', 'Clarity']:
+        pattern = f"{metric}: \[\[(\d+)\]\]"
+        match = re.search(pattern, response)
+        if match:
+            ratings[metric.lower().replace(' ', '_')] = float(match.group(1))
+    
+    # Extract hallucination
+    hallucination_pattern = r"Hallucination: \[\[(Yes|No)\]\]"
+    hallucination_match = re.search(hallucination_pattern, response)
+    if hallucination_match:
+        ratings['hallucination'] = hallucination_match.group(1)
+    
+    return ratings
+
+def evaluate_note(note: str) -> Dict[str, float]:
+    """Evaluate a note using Mistral via Ollama."""
+    prompt = f"""SOAP Note:
+{note}
+
+Please evaluate the SOAP note according to the criteria above."""
+
+    try:
+        client = Client()
+        response = client.generate(
+            model='mistral',
+            prompt=prompt,
+            system=SYSTEM_PROMPT
+        )
+        return extract_ratings(response['response'])
+    except Exception as e:
+        print(f"Error evaluating note: {e}")
+        return None
+
+def find_note_files(base_dir: str) -> List[str]:
+    """Find all note files."""
+    note_files = []
+    base_path = Path(base_dir)
+    
+    for note_file in base_path.rglob("*.txt"):
+        note_files.append(str(note_file))
+    
+    return note_files
+
+def main():
+    # Find all note files
+    note_files = find_note_files("notes/data")
+    
+    results = []
+    for note_path in note_files:
+        print(f"Evaluating {note_path}")
+        
+        # Read the file
+        with open(note_path, 'r') as f:
+            note = f.read()
+        
+        # Extract model info from filename
+        model_info = Path(note_path).stem.split('_')
+        model_name = model_info[2]
+        model_size = model_info[3]
+        
+        # Evaluate the note
+        ratings = evaluate_note(note)
+        if ratings:
+            result = {
+                'note_path': note_path,
+                'model_used': model_name,
+                'model_size': model_size,
+                **ratings
+            }
+            results.append(result)
+    
+    # Create DataFrame and save to CSV
+    df = pd.DataFrame(results)
+    df.to_csv('evaluations/soap_note_evaluations.csv', index=False)
+    print(f"Saved {len(results)} evaluations to evaluations/soap_note_evaluations.csv")
+
+if __name__ == "__main__":
+    main()
