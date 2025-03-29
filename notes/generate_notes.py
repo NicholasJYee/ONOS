@@ -3,16 +3,14 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional
 import sys
-# Fix the import path to properly find the medical_scribe app
 sys.path.append(os.path.join(os.path.dirname(__file__), "../medical_scribe"))
 from app.services.note_generation_service import NoteGenerationService
 
 # Models to use for generation
 MODELS = [
-    "llama3.2:1b",
-    "gemma3:1b",
-    "qwen2.5:1.5b",
-    "qwen2.5:0.5b",
+    "llama3.2:3b",
+    "gemma3:4b",
+    "qwen2.5:3b",
     "deepseek-r1:1.5b"
 ]
 
@@ -22,10 +20,12 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
         with open(file_path, 'r', encoding='utf-8') as f:
             transcription = f.read()
         
+        # Get the pathology and visit type from the directory structure
+        pathology = file_path.parent.name
+        visit_type = file_path.parent.parent.name
+        
         # Create output directory structure
-        interviews_base = file_path.parent
-        relative_path = file_path.relative_to(interviews_base)
-        output_path = output_base_path / relative_path.parent
+        output_path = output_base_path / visit_type / pathology
         output_path.mkdir(parents=True, exist_ok=True)
         
         # Generate SOAP notes for each model
@@ -48,7 +48,6 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
         print(f"Error processing {file_path}: {e}")
 
 def main():
-    # Base paths - use relative paths
     interviews_path = Path("interviews/data")
     notes_path = Path("notes/data")
     
