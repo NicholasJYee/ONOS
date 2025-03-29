@@ -6,3 +6,4 @@ torch
 git+https://github.com/openai/whisper.git
 numpy
 ffmpeg-python 
+ollama

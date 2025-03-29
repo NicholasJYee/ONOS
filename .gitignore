@@ -1,0 +1,6 @@
+env/
+.DS_Store
+demo
+*__pycache__
+medical_scribe/.DS_Store
+medical_scribe/uploads/

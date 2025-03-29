@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file, current_app
 from app.services.audio_service import AudioService
 from app.services.transcription_service import TranscriptionService
 from app.services.note_generation_service import NoteGenerationService
+import os
 
 main = Blueprint('main', __name__)
 
@@ -28,15 +29,24 @@ def process_audio():
         # Generate note
         note = NoteGenerationService.generate_note(transcript)
         
-        # Cleanup the temporary audio file
-        AudioService.cleanup_audio(audio_path)
+        # Get the filename for download
+        filename = os.path.basename(audio_path)
         
         return jsonify({
             'transcript': transcript,
-            'note': note
+            'note': note,
+            'audioPath': filename
         })
     except Exception as e:
         # Ensure cleanup even if processing fails
         if 'audio_path' in locals():
             AudioService.cleanup_audio(audio_path)
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
+
+@main.route('/download-audio/<filename>')
+def download_audio(filename):
+    try:
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404 

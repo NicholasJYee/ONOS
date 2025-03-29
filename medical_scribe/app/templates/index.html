@@ -5,24 +5,33 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Record Conversation</h5>
+                <h5 class="card-title">Upload or Record Conversation</h5>
                 <div class="d-flex flex-column gap-2">
-                    <canvas id="visualizer" height="60"></canvas>
-                    <div class="btn-group">
-                        <button id="startRecord" class="btn btn-primary">Start Recording</button>
-                        <button id="pauseRecord" class="btn btn-warning" disabled>Pause</button>
-                        <button id="stopRecord" class="btn btn-danger" disabled>Stop</button>
+                    <div class="mb-3">
+                        <label for="audioFileUpload" class="form-label">Upload an audio file:</label>
+                        <input type="file" class="form-control" id="audioFileUpload" accept="audio/*">
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div id="timer" class="text-muted"></div>
-                        <div id="maxDuration" class="text-muted">Max: 15:00</div>
+                    
+                    <div class="mt-4">
+                        <h6>Or record audio:</h6>
+                        <canvas id="visualizer" height="60"></canvas>
+                        <div class="btn-group">
+                            <button id="startRecord" class="btn btn-primary">Start Recording</button>
+                            <button id="pauseRecord" class="btn btn-warning" disabled>Pause</button>
+                            <button id="stopRecord" class="btn btn-danger" disabled>Stop</button>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div id="timer" class="text-muted"></div>
+                            <div id="maxDuration" class="text-muted">Max: 15:00</div>
+                        </div>
                     </div>
+                    
                     <div id="recordingStatus" class="text-muted"></div>
                     
                     <div id="previewControls" class="d-none">
-                        <h6 class="mt-3">Preview Recording</h6>
+                        <h6 class="mt-3">Audio Preview</h6>
                         <audio id="audioPreview" controls class="w-100"></audio>
-                        <button id="processAudio" class="btn btn-success mt-2">Process Recording</button>
                     </div>
                 </div>
             </div>
@@ -32,7 +41,12 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Generated Note</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Generated Note</h5>
+                    <button id="copyNote" class="btn btn-outline-primary btn-sm">
+                        <span id="copyIcon">📋</span> Copy Note
+                    </button>
+                </div>
                 <div id="noteOutput" class="border p-3 bg-light">
                     Note will appear here...
                 </div>
@@ -125,12 +139,16 @@ function stopRecording() {
     }
 }
 
-async function processRecording() {
+async function processAudioFile(audioData, isRecording = false) {
     document.getElementById('recordingStatus').textContent = 'Processing...';
-    document.getElementById('processAudio').disabled = true;
     
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.wav');
+    if (isRecording) {
+        // Convert Blob to WAV file
+        formData.append('audio', audioData, 'recording.wav');
+    } else {
+        formData.append('audio', audioData);
+    }
     
     try {
         const response = await fetch('/process-audio', {
@@ -141,7 +159,7 @@ async function processRecording() {
         const data = await response.json();
         if (response.ok) {
             document.getElementById('noteOutput').innerText = data.note;
-            document.getElementById('previewControls').classList.add('d-none');
+            document.getElementById('previewControls').classList.remove('d-none');
         } else {
             alert(data.error);
         }
@@ -149,14 +167,38 @@ async function processRecording() {
         alert('An error occurred while processing the audio');
     } finally {
         document.getElementById('recordingStatus').textContent = '';
-        document.getElementById('processAudio').disabled = false;
     }
+}
+
+function copyNote() {
+    const noteText = document.getElementById('noteOutput').innerText;
+    navigator.clipboard.writeText(noteText).then(() => {
+        const copyBtn = document.getElementById('copyNote');
+        const copyIcon = document.getElementById('copyIcon');
+        const originalText = copyBtn.innerHTML;
+        
+        copyBtn.innerHTML = '<span>✓</span> Copied!';
+        copyBtn.classList.add('btn-success');
+        copyBtn.classList.remove('btn-outline-primary');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('btn-success');
+            copyBtn.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy note');
+        console.error('Failed to copy: ', err);
+    });
 }
 
 document.getElementById('startRecord').addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        const options = {
+            mimeType: 'audio/webm'  // Using webm format which is widely supported
+        };
+        mediaRecorder = new MediaRecorder(stream, options);
         audioChunks = [];
         
         setupVisualizer(stream);
@@ -165,15 +207,17 @@ document.getElementById('startRecord').addEventListener('click', async () => {
             audioChunks.push(event.data);
         };
         
-        mediaRecorder.onstop = () => {
-            audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        mediaRecorder.onstop = async () => {
+            audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const audioUrl = URL.createObjectURL(audioBlob);
             const audioPreview = document.getElementById('audioPreview');
             audioPreview.src = audioUrl;
             document.getElementById('previewControls').classList.remove('d-none');
+            
+            await processAudioFile(audioBlob, true);
         };
         
-        mediaRecorder.start(1000); // Collect data every second
+        mediaRecorder.start(1000);
         startTime = Date.now();
         timerInterval = setInterval(updateTimer, 1000);
         
@@ -203,6 +247,22 @@ document.getElementById('pauseRecord').addEventListener('click', () => {
 });
 
 document.getElementById('stopRecord').addEventListener('click', stopRecording);
-document.getElementById('processAudio').addEventListener('click', processRecording);
+
+// File upload handler
+document.getElementById('audioFileUpload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        // Create audio preview
+        const audioUrl = URL.createObjectURL(file);
+        const audioPreview = document.getElementById('audioPreview');
+        audioPreview.src = audioUrl;
+        document.getElementById('previewControls').classList.remove('d-none');
+        
+        // Process the file
+        await processAudioFile(file);
+    }
+});
+
+document.getElementById('copyNote').addEventListener('click', copyNote);
 </script>
 {% endblock %} 

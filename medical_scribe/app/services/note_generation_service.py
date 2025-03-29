@@ -4,13 +4,11 @@ class NoteGenerationService:
     @staticmethod
     def generate_note(transcript):
         try:
-            # You can use different models like 'mistral', 'llama2', 'mixtral'
-            # Run 'ollama pull mistral' first to download the model
-            response = ollama.chat(model='mistral', 
+            response = ollama.chat(model='deepseek-r1:1.5b', 
                 messages=[
                     {
                         'role': 'system',
-                        'content': 'You are a medical scribe assistant. Convert the following doctor-patient conversation into a structured medical note following standard SOAP format.'
+                        'content': 'You are a medical scribe assistant. Convert the following doctor-patient conversation into a structured medical note following standard SOAP format. Only include the assessment and plan.'
                     },
                     {
                         'role': 'user',
