@@ -148,17 +148,24 @@ def main():
     # Setup paths
     interviews_path = Path("interviews/data")
     notes_path = Path("notes/data")
-    output_dir = Path("evaluations/pdf")
-    output_dir.mkdir(exist_ok=True)
+    output_base_path = Path("evaluations/pdf")
     
     # Process each transcription file
     for transcription_file in interviews_path.rglob("*.txt"):
         print(f"Processing {transcription_file}")
         
+        # Get the pathology and visit type from the directory structure
+        pathology = transcription_file.parent.name
+        visit_type = transcription_file.parent.parent.name
+        
+        # Create output directory structure mirroring the input
+        output_dir = output_base_path / visit_type / pathology
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
         # Get transcription and corresponding notes
         transcription, soap_notes = get_transcription_and_notes(transcription_file, notes_path)
         
-        # Create output filename
+        # Create output filename in the appropriate directory
         output_file = output_dir / f"{transcription_file.stem}_visualization.pdf"
         
         # Create PDF
