@@ -45,13 +45,21 @@ Use the following criteria to assign numeric ratings (0–5) to each metric:
 ### **Hallucination Detection:**
 Clearly state if the note contains hallucinated information—clinical details or statements that are not clinically appropriate or accurate, potentially misleading the clinical interpretation or patient management.
 
-Begin your evaluation with a concise explanation that explicitly references any discrepancies, hallucinations, or strengths observed in the note. Clearly state numeric ratings and indicate hallucinations (if any) using this format:
+Clearly state numeric ratings and indicate hallucinations (if any) using this format (do not add any other text):
 
 Clinical Accuracy: [[X]]
 Completeness: [[X]]
 Conciseness: [[X]]
 Clarity: [[X]]
-Hallucination: [[Yes/No]]"""
+Hallucination: [[Yes/No]]
+
+As an example, a good response will look like this:
+
+Clinical Accuracy: [[5]]
+Completeness: [[4]]
+Conciseness: [[3]]
+Clarity: [[2]]
+Hallucination: [[Yes]]"""
 
 def extract_ratings(response: str) -> Dict[str, float]:
     """Extract ratings from the LLM response."""
