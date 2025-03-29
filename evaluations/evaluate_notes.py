@@ -47,19 +47,19 @@ Clearly state if the note contains hallucinated information—clinical details o
 
 Clearly state numeric ratings and indicate hallucinations (if any) using this format (do not add any other text):
 
-Clinical Accuracy: [[X]]
-Completeness: [[X]]
-Conciseness: [[X]]
-Clarity: [[X]]
-Hallucination: [[Yes/No]]
+Clinical Accuracy: [X]
+Completeness: [X]
+Conciseness: [X]
+Clarity: [X]
+Hallucination: [Yes/No]
 
 As an example, a good response will look like this:
 
-Clinical Accuracy: [[5]]
-Completeness: [[4]]
-Conciseness: [[3]]
-Clarity: [[2]]
-Hallucination: [[Yes]]"""
+Clinical Accuracy: [5]
+Completeness: [4]
+Conciseness: [3]
+Clarity: [2]
+Hallucination: [Yes]"""
 
 def extract_ratings(response: str) -> Dict[str, float]:
     """Extract ratings from the LLM response."""
@@ -67,20 +67,20 @@ def extract_ratings(response: str) -> Dict[str, float]:
     
     # Extract numeric ratings
     for metric in ['Clinical Accuracy', 'Completeness', 'Conciseness', 'Clarity']:
-        pattern = f"{metric}: \[\[(\d+)\]\]"
+        pattern = f"{metric}: \[(\d+)\]"
         match = re.search(pattern, response)
         if match:
             ratings[metric.lower().replace(' ', '_')] = float(match.group(1))
     
     # Extract hallucination
-    hallucination_pattern = r"Hallucination: \[\[(Yes|No)\]\]"
+    hallucination_pattern = r"Hallucination: \[+(Yes|No)\]+"
     hallucination_match = re.search(hallucination_pattern, response)
     if hallucination_match:
         ratings['hallucination'] = hallucination_match.group(1)
     
     return ratings
 
-def evaluate_note(note: str) -> Dict[str, float]:
+def evaluate_note(note: str) -> Tuple[Dict[str, float], str]:
     """Evaluate a note using Mistral via Ollama."""
     prompt = f"""SOAP Note:
 {note}
@@ -94,10 +94,10 @@ Please evaluate the SOAP note according to the criteria above."""
             prompt=prompt,
             system=SYSTEM_PROMPT
         )
-        return extract_ratings(response['response'])
+        return extract_ratings(response['response']), response['response']
     except Exception as e:
         print(f"Error evaluating note: {e}")
-        return None
+        return None, str(e)
 
 def find_note_files(base_dir: str) -> List[str]:
     """Find all note files."""
@@ -112,8 +112,12 @@ def find_note_files(base_dir: str) -> List[str]:
 def main():
     # Find all note files
     note_files = find_note_files("notes/data")
+    total_files = len(note_files)
+    print(f"Found {total_files} note files to evaluate")
     
     results = []
+    failed_evaluations = []
+    
     for note_path in note_files:
         print(f"Evaluating {note_path}")
         
@@ -127,7 +131,7 @@ def main():
         model_size = model_info[3]
         
         # Evaluate the note
-        ratings = evaluate_note(note)
+        ratings, raw_response = evaluate_note(note)
         if ratings:
             result = {
                 'note_path': note_path,
@@ -136,11 +140,38 @@ def main():
                 **ratings
             }
             results.append(result)
+        else:
+            failed_evaluations.append({
+                'note_path': note_path,
+                'model_used': model_name,
+                'model_size': model_size,
+                'error': raw_response
+            })
     
     # Create DataFrame and save to CSV
     df = pd.DataFrame(results)
     df.to_csv('evaluations/soap_note_evaluations.csv', index=False)
-    print(f"Saved {len(results)} evaluations to evaluations/soap_note_evaluations.csv")
+    
+    # Save failed evaluations to a separate CSV
+    if failed_evaluations:
+        failed_df = pd.DataFrame(failed_evaluations)
+        failed_df.to_csv('evaluations/failed_evaluations.csv', index=False)
+    
+    # Print summary
+    successful = len(results)
+    failed = len(failed_evaluations)
+    print(f"\nEvaluation Summary:")
+    print(f"Total files processed: {total_files}")
+    print(f"Successfully evaluated: {successful}")
+    print(f"Failed evaluations: {failed}")
+    print(f"Success rate: {(successful/total_files)*100:.1f}%")
+    
+    if failed_evaluations:
+        print("\nFailed Evaluations:")
+        for fail in failed_evaluations:
+            print(f"\nFile: {fail['note_path']}")
+            print(f"Model: {fail['model_used']} ({fail['model_size']})")
+            print(f"Error: {fail['error']}")
 
 if __name__ == "__main__":
     main()
