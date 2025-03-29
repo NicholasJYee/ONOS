@@ -31,7 +31,7 @@ FOLLOWUP_PERIODS = [
 def setup_directories():
     """Create the necessary directory structure."""
     base_dir = "interviews/data"
-    visit_types = ["consults", "followup"]
+    visit_types = ["consults", "followups"]
     
     for visit in visit_types:
         for pathology in PATHOLOGIES:
@@ -140,7 +140,7 @@ def generate_interviews(n_consults: int, m_followups: int):
                 followup = generate_interview(prompt)
                 
                 followup_filename = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
-                followup_filepath = os.path.join("interviews/data", "followup",
+                followup_filepath = os.path.join("interviews/data", "followups",
                                                 pathology.lower().replace(" ", "_"),
                                                 followup_filename)
                 save_interview(followup, followup_filepath)
