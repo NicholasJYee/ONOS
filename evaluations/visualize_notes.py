@@ -8,6 +8,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_LEFT
 import markdown
 import re
+import pandas as pd
 
 def process_markdown(text: str) -> str:
     """Convert markdown text to HTML for reportlab."""
@@ -32,6 +33,20 @@ def get_transcription_and_notes(transcription_path: Path, notes_dir: Path) -> tu
         "deepseek-r1:1.5b"
     ]
     
+    # Load evaluation scores if available
+    scores_dict = {}
+    try:
+        df = pd.read_csv('evaluations/soap_note_evaluations.csv')
+        for _, row in df.iterrows():
+            model_key = f"{row['model_used']}:{row['model_size']}"
+            scores_dict[model_key] = {
+                'completeness': row['completeness'],
+                'conciseness': row['conciseness'],
+                'hallucination': 'Yes' if row['hallucination'] == 1 else 'No'
+            }
+    except:
+        print("Warning: Could not load evaluation scores")
+    
     # Get base filename without extension
     base_name = transcription_path.stem
     
@@ -45,7 +60,20 @@ def get_transcription_and_notes(transcription_path: Path, notes_dir: Path) -> tu
         with open(note_file, 'r', encoding='utf-8') as f:
             note_content = f.read()
             note_content = process_markdown(note_content)
-            notes_dict[model_name] = (f"{model_info[2]} ({model_info[3]})", note_content)
+            
+            # Create model header with scores on separate lines
+            display_name = f"{model_info[2]} ({model_info[3]})"
+            if model_name in scores_dict:
+                scores = scores_dict[model_name]
+                header = (f"{display_name}<br/>"
+                         f"Completeness: {scores['completeness']}, "
+                         f"Conciseness: {scores['conciseness']}, "
+                         f"Hallucination: {scores['hallucination']}<br/>"
+                         f"{'_' * 40}<br/><br/>")  # Add visible line separator
+            else:
+                header = f"{display_name}<br/>{'_' * 40}<br/><br/>"
+                
+            notes_dict[model_name] = (header, note_content)
     
     # Create ordered list of notes based on model_order
     soap_notes = []
