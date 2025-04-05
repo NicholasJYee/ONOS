@@ -1,9 +1,5 @@
 import os
-import json
 from pathlib import Path
-from typing import List, Dict, Optional
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "../medical_scribe"))
 from app.services.note_generation_service import NoteGenerationService
 
 # Models to use for generation
@@ -32,15 +28,20 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
         for model in MODELS:
             print(f"Generating SOAP note for {file_path} using {model}")
             try:
-                soap_note = NoteGenerationService.generate_note(transcription, model)
+                # Generate complete SOAP note
+                soap_note = NoteGenerationService.generate_note_from_transcript(
+                    transcript=transcription,
+                    model=model
+                )
                 
-                # Create output filename with model name
+                # Save final SOAP note
                 model_name = model.replace(":", "_")
                 output_file = output_path / f"{file_path.stem}_{model_name}.txt"
                 
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(soap_note)
                 print(f"Generated SOAP note saved to {output_file}")
+                
             except Exception as e:
                 print(f"Failed to generate SOAP note for {file_path} using {model}: {e}")
                 

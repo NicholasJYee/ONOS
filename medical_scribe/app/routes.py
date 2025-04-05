@@ -26,8 +26,11 @@ def process_audio():
         # Transcribe audio
         transcript = TranscriptionService.transcribe_audio(audio_path)
         
-        # Generate note
-        note = NoteGenerationService.generate_note(transcript)
+        # Generate note using the new method that handles transcript splitting
+        note = NoteGenerationService.generate_note_from_transcript(
+            transcript=transcript,
+            model='deepseek-r1:1.5b'
+        )
         
         # Get the filename for download
         filename = os.path.basename(audio_path)
