@@ -194,7 +194,7 @@ def main():
         transcription, soap_notes = get_transcription_and_notes(transcription_file, notes_path)
         
         # Create output filename in the appropriate directory
-        output_file = output_dir / f"{transcription_file.stem}_visualization.pdf"
+        output_file = output_dir / f"{transcription_file.stem}.pdf"
         
         # Create PDF
         create_pdf(str(output_file), transcription, soap_notes)

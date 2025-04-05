@@ -2,7 +2,7 @@ import ollama
 
 class NoteGenerationService:
     @staticmethod
-    def generate_note(transcript, model='deepseek-r1:1.5b'):
+    def generate_note(transcript, model='deepseek-r1:70b'):
         try:
             response = ollama.chat(model=model, 
                 messages=[

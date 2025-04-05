@@ -7,3 +7,6 @@ medical_scribe/uploads/
 interviews/data/
 notes/data/
 evaluations/pdf/
+evaluations/pdf.zip
+*temp*
+standardized_patients/data/

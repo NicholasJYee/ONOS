@@ -16,12 +16,6 @@ PATHOLOGIES = [
     "bicep tendon ruptures", "Achilles tendon ruptures", "septic arthritis"
 ]
 
-COMPLICATIONS = [
-    "infection", "non-union", "malunion", "hardware failure", 
-    "hardware irritation", "persistent pain", "functional limitation",
-    "paresthesia", "weakness", "stiffness", "delayed healing"
-]
-
 FOLLOWUP_PERIODS = [
     ("early", 0.75, lambda: f"{random.randint(2, 12)} weeks"),
     ("middle", 0.20, lambda: f"{random.randint(3, 6)} months"),
@@ -30,7 +24,7 @@ FOLLOWUP_PERIODS = [
 
 def setup_directories():
     """Create the necessary directory structure."""
-    base_dir = "interviews/data"
+    base_dir = "standardized_patients/data"
     visit_types = ["consults", "followups"]
     
     for visit in visit_types:
@@ -39,49 +33,81 @@ def setup_directories():
             os.makedirs(path, exist_ok=True)
 
 def generate_prompt(pathology: str, is_followup: bool, followup_period: str = None) -> str:
-    """Generate a prompt for the language model."""
+    """Generate a prompt for the language model to create a patient profile."""
     
     if is_followup:
-        base_prompt = f"""Generate a followup medical interview transcript for a patient with {pathology} 
+        base_prompt = f"""Generate a detailed followup patient profile for a patient with {pathology} 
         who is being seen {followup_period} after their initial injury. 
 
-        The interview should be a natural conversation that includes:
-        1. Brief confirmation of injury and time since injury
-        2. How they've been doing since last visit
-        3. Current symptoms and functional status
-        4. Relevant physical exam findings
-        5. Review of any new imaging (if applicable)
-        6. Brief assessment and plan
+        The profile should include:
+        1. Updated History:
+           - Changes in symptoms since last visit
+           - New medical history or complications
+           - Changes in medications
+           - Changes in social history
         
-        Format the response as a natural back-and-forth conversation without using "Doctor:" or "Patient:" 
-        labels. Keep it concise and focused on changes since last visit. Include relevant medical terminology 
-        while keeping patient responses in lay language. Don't add line breaks.
-
-        Example format:
-        Good morning. How have you been doing since we last saw you? Much better, doctor. The pain has improved a lot.
+        2. Updated Physical Exam Findings:
+           - Current range of motion
+           - Strength testing
+           - Special tests
+           - Any new findings
         
-        [Continue in this conversational format...]"""
+        3. Updated Imaging Findings:
+           - Comparison with previous imaging
+           - New findings
+           - Healing progress
+        
+        4. Assessment and Plan:
+           - Current status
+           - Progress since last visit
+           - Next steps in treatment
+           - Any modifications to treatment plan
+        
+        5. Patient Questions:
+           - 3-5 realistic follow-up questions the patient might ask
+           - Questions should be specific to their condition and recovery
+        
+        Format the response in clear sections with appropriate medical terminology.
+        Make the case realistic with varying degrees of recovery and complications."""
     else:
-        base_prompt = f"""Generate a detailed medical interview transcript for a patient with {pathology}. 
+        base_prompt = f"""Generate a detailed initial patient profile for a patient with {pathology}. 
 
-        The interview should be a natural conversation that includes:
-        1. Initial greeting and patient identification
-        2. History of injury/condition and mechanism
-        3. Symptoms and functional limitations
-        4. Physical examination findings and observations
-        5. Discussion of imaging results (if applicable)
-        6. Treatment plan discussion
-        7. Patient questions and concerns
+        The profile should include:
+        1. History:
+           - Present illness and mechanism of injury
+           - Past medical history
+           - Past surgical history
+           - Current medications
+           - Allergies
+           - Social history (occupation, smoking, alcohol, etc.)
         
-        Format the response as a natural back-and-forth conversation without using "Doctor:" or "Patient:" 
-        labels. The doctor should introduce themselves at the start. Include relevant medical terminology 
-        while keeping patient responses in lay language. Make the case realistic with varying degrees 
-        of severity and outcomes. Don't add line breaks.
-
-        Example format:
-        Good morning. What brings you in to clinic today? I was playing soccer when I was involved in a tackle. I feel awkwardly onto my right side.
+        2. Physical Exam Findings:
+           - General appearance
+           - Vital signs
+           - Specific exam findings related to injury
+           - Range of motion
+           - Strength testing
+           - Special tests
+           - Neurovascular status
         
-        [Continue in this conversational format...]"""
+        3. Imaging Findings:
+           - X-ray findings
+           - CT/MRI findings if applicable
+           - Classification of injury if applicable
+        
+        4. Assessment and Plan:
+           - Diagnosis
+           - Treatment options
+           - Recommended treatment plan
+           - Expected recovery timeline
+           - Follow-up schedule
+        
+        5. Patient Questions:
+           - 3-5 realistic questions the patient might ask
+           - Questions should be specific to their condition and treatment
+        
+        Format the response in clear sections with appropriate medical terminology.
+        Make the case realistic with varying degrees of severity and complexity."""
 
     return base_prompt
 
@@ -95,8 +121,8 @@ def get_followup_period() -> str:
             return label()
     return FOLLOWUP_PERIODS[-1][2]()
 
-def generate_interview(prompt: str) -> str:
-    """Generate an interview using Ollama."""
+def generate_profile(prompt: str) -> str:
+    """Generate a patient profile using Ollama."""
     try:
         response = ollama.generate(
             model='phi3:14b',
@@ -108,14 +134,14 @@ def generate_interview(prompt: str) -> str:
         )
         return response['response']
     except Exception as e:
-        raise Exception (f"Error generating interview: {e}")
+        raise Exception(f"Error generating profile: {e}")
 
-def save_interview(content: str, filepath: str):
-    """Save the generated interview to a file."""
+def save_profile(content: str, filepath: str):
+    """Save the generated profile to a file."""
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 
-def generate_interviews(n_consults: int, m_followups: int):
+def generate_profiles(n_consults: int, m_followups: int):
     """Generate n consults and m followups for each pathology."""
     setup_directories()
     
@@ -127,35 +153,35 @@ def generate_interviews(n_consults: int, m_followups: int):
         for pathology in PATHOLOGIES:
             print(f"Generating consult for {pathology}...")
             prompt = generate_prompt(pathology, False)
-            interview = generate_interview(prompt)
+            profile = generate_profile(prompt)
             
             filename = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
-            filepath = os.path.join("interviews/data", "consults", 
+            filepath = os.path.join("standardized_patients/data", "consults", 
                                     pathology.lower().replace(" ", "_"), 
                                     filename)
-            save_interview(interview, filepath)
+            save_profile(profile, filepath)
                 
             # Generate followups for this consult
             for j in range(m_followups):
                 followup_period = get_followup_period()
                 prompt = generate_prompt(pathology, True, followup_period)
-                followup = generate_interview(prompt)
+                followup = generate_profile(prompt)
                 
                 followup_filename = f"{time.strftime('%Y%m%d_%H%M%S')}.txt"
-                followup_filepath = os.path.join("interviews/data", "followups",
+                followup_filepath = os.path.join("standardized_patients/data", "followups",
                                                 pathology.lower().replace(" ", "_"),
                                                 followup_filename)
-                save_interview(followup, followup_filepath)
+                save_profile(followup, followup_filepath)
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Generate synthetic patient interviews')
-    parser.add_argument('--n_consults', type=int, default=2,
+    parser = argparse.ArgumentParser(description='Generate standardized patient profiles')
+    parser.add_argument('--n_consults', type=int, default=5,
                         help='Number of consults per pathology')
     parser.add_argument('--m_followups', type=int, default=1,
                         help='Number of followups per consult')
     
     args = parser.parse_args()
     
-    generate_interviews(args.n_consults, args.m_followups)
+    generate_profiles(args.n_consults, args.m_followups)
