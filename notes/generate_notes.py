@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "../medical_scribe"))
 from app.services.note_generation_service import NoteGenerationService
 
 # Models to use for generation
