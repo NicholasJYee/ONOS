@@ -24,7 +24,7 @@ def process_audio():
         audio_path = AudioService.save_audio(audio_file)
         
         # Transcribe audio
-        transcript = TranscriptionService.transcribe_audio(audio_path)
+        transcript = TranscriptionService.transcribe_audio(audio_path, save_to_file=True)
         
         # Generate note using the new method that handles transcript splitting
         note = NoteGenerationService.generate_note_from_transcript(

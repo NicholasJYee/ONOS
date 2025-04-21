@@ -1,9 +1,80 @@
 note_path,model_used,model_size,clinical_accuracy,completeness,conciseness,clarity,hallucination
-notes/data/consults/test/77364214-97da-4316-9b5d-184f631de29_9_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,5.0,4.0,3.0,3.0,No
-notes/data/consults/test/292c0e4c-0f77-4b07-830c-48b17edd1f5_1_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,2.0,No
-notes/data/consults/test/292c0e4c-0f77-4b07-830c-48b17edd1f5_1_qwen2.5_3b.txt,qwen2.5,3b,4.0,5.0,3.0,2.0,No
-notes/data/consults/test/77364214-97da-4316-9b5d-184f631de29_9_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,3.0,No
-notes/data/consults/test/292c0e4c-0f77-4b07-830c-48b17edd1f5_1_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,5.0,3.0,3.0,No
-notes/data/consults/test/292c0e4c-0f77-4b07-830c-48b17edd1f5_1_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
-notes/data/consults/test/77364214-97da-4316-9b5d-184f631de29_9_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,2.0,No
-notes/data/consults/test/77364214-97da-4316-9b5d-184f631de29_9_qwen2.5_3b.txt,qwen2.5,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 33_llama3.2_3b.txt,llama3.2,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 29_qwen2.5_3b.txt,qwen2.5,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 36_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 34_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 33_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 25_llama3.2_3b.txt,llama3.2,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 39_gemma3_4b.txt,gemma3,4b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 33_qwen2.5_3b.txt,qwen2.5,3b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 26_qwen2.5_3b.txt,qwen2.5,3b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 40_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 39_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 42_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 41_llama3.2_3b.txt,llama3.2,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 27_qwen2.5_3b.txt,qwen2.5,3b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 32_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 29_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 43_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 35_qwen2.5_3b.txt,qwen2.5,3b,4.0,3.0,5.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 24_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,3.0,2.0,4.0,3.0,Yes
+notes/data/mock_interviews/mock_interviews/New Recording 34_llama3.2_3b.txt,llama3.2,3b,4.0,5.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 40_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 40_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 37_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 41_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 38_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 30_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 37_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 41_qwen2.5_3b.txt,qwen2.5,3b,4.0,5.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 27_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 25_qwen2.5_3b.txt,qwen2.5,3b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 30_qwen2.5_3b.txt,qwen2.5,3b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 38_qwen2.5_3b.txt,qwen2.5,3b,5.0,3.0,4.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 35_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 32_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 34_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 24_gemma3_4b.txt,gemma3,4b,4.0,3.0,5.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 39_qwen2.5_3b.txt,qwen2.5,3b,4.0,3.0,4.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 33_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 32_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 37_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 40_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 25_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 31_qwen2.5_3b.txt,qwen2.5,3b,4.0,5.0,3.0,4.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 24_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 43_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 24_llama3.2_3b.txt,llama3.2,3b,5.0,3.0,4.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 36_qwen2.5_3b.txt,qwen2.5,3b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 36_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 38_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 32_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 42_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 25_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 29_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 26_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 37_llama3.2_3b.txt,llama3.2,3b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 42_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 31_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,2.0,1.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 29_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 34_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 30_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 41_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 42_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,2.0,3.0,4.0,3.0,Yes
+notes/data/mock_interviews/mock_interviews/New Recording 35_gemma3_4b.txt,gemma3,4b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 26_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 26_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 31_gemma3_4b.txt,gemma3,4b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 27_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 28_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 31_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 28_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 28_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 27_llama3.2_3b.txt,llama3.2,3b,4.0,5.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 43_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 43_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,4.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 39_llama3.2_3b.txt,llama3.2,3b,4.0,3.0,4.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 30_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,5.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 38_gemma3_4b.txt,gemma3,4b,5.0,4.0,3.0,2.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 36_llama3.2_3b.txt,llama3.2,3b,5.0,4.0,3.0,3.0,No
+notes/data/mock_interviews/mock_interviews/New Recording 35_deepseek-r1_1.5b.txt,deepseek-r1,1.5b,4.0,3.0,4.0,3.0,No

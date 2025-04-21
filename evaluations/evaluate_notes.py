@@ -127,8 +127,8 @@ def main():
         
         # Extract model info from filename
         model_info = Path(note_path).stem.split('_')
-        model_name = model_info[2]
-        model_size = model_info[3]
+        model_name = model_info[-2]
+        model_size = model_info[-1]
         
         # Evaluate the note
         ratings, raw_response = evaluate_note(note)

@@ -1,14 +1,15 @@
 note_path,model_used,model_size,error
-notes/data/consults/quadricep_tendon_ruptures/20250328_222145_gemma3_4b.txt,gemma3,4b," Clinical Scenario Evaluation:
+notes/data/mock_interviews/mock_interviews/New Recording 28_qwen2.5_3b.txt,qwen2.5,3b," Clinical Note Evaluation:
 
-1. Problem Identification (History & Examination): The problem identification is clear, concise and detailed. The history provides a comprehensive background of the patient's condition, including symptoms, past medical history, and social history that may impact the treatment plan. The examination findings are also well-documented, describing both objective and subjective findings related to the injury site and overall health status. (5/5)
-
-2. Assessment & Differential Diagnosis: The assessment is thorough, with a clear differentiation between the suspected diagnosis (partial quadriceps tendon tear) and other possible diagnoses that were ruled out through various diagnostic tests. The reasoning behind the chosen tests and their role in confirming the diagnosis is also explained well. (5/5)
-
-3. Plan (Treatment & Follow-up): The treatment plan is detailed, comprehensive, and divided into phases to address the patient's acute phase, rehabilitation, and long-term maintenance needs. It includes various interventions such as physiotherapy, pharmacological therapy, bracing, nutritional advice, and psychological support. The plan also acknowledges potential setbacks and adaptations needed in response to them. The follow-up scenario demonstrates an understanding of the importance of considering other health issues that may arise during treatment. (5/5)
-
-4. Evaluation & Progress: The progress of the patient's treatment is documented, highlighting key milestones achieved and setbacks encountered. The use of evidence-based practice in guiding the choice of therapeutic interventions strengthens the evaluation section. (5/5)
-
-Total Score: 20/20
-
-The SOAP note is well-structured, comprehensive, and effectively communicates the patient's clinical scenario, assessment, treatment plan, progress, and follow-up care. It demonstrates a clear understanding of evidence-based practice and patient-centered care."
+| Criteria       | Score    | Comments                                             |
+|---------------|---------|-----------------------------------------------------|
+| Identification | Met     | Patient's name and problem presented are identified  |
+| History       | Exceeds | Comprehensive history, both initial and follow-up     |
+| Exam         | Met     | Physical exam findings documented                      |
+| Assessment    | Met     | Clear assessment of the patient's condition           |
+| Diagnosis    | Met     | Accurate primary diagnosis                             |
+| Plan         | Met     | Clear and appropriate plan outlined                |
+| Future Actions| Met     | Follow-up actions are scheduled and documented          |
+| Patient Education| Exceeds| Thorough explanation of the patient's condition, treatment options, and expectations   |
+| Communication  | Met    | Effective communication with the patient regarding their care |
+| Documentation | Met   | Comprehensive documentation of all aspects of the visit  |"

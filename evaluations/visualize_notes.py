@@ -55,14 +55,14 @@ def get_transcription_and_notes(transcription_path: Path, notes_dir: Path) -> tu
     for note_file in notes_dir.rglob(f"{base_name}_*.txt"):
         # Extract model info from filename
         model_info = note_file.stem.split('_')
-        model_name = f"{model_info[2]}:{model_info[3]}"  # Reconstruct full model name
+        model_name = f"{model_info[-2]}:{model_info[-1]}"
         
         with open(note_file, 'r', encoding='utf-8') as f:
             note_content = f.read()
             note_content = process_markdown(note_content)
             
             # Create model header with scores on separate lines
-            display_name = f"{model_info[2]} ({model_info[3]})"
+            display_name = f"{model_info[-2]} ({model_info[-1]})"
             if model_name in scores_dict:
                 scores = scores_dict[model_name]
                 header = (f"{display_name}<br/>"
