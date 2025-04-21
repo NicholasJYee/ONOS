@@ -13,7 +13,7 @@ MODELS = [
 ]
 
 def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
-    """Process a single transcription file and generate SOAP notes for all models."""
+    """Process a single transcription file and generate clinical notes for all models."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             transcription = f.read()
@@ -26,26 +26,23 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
         output_path = output_base_path / visit_type / pathology
         output_path.mkdir(parents=True, exist_ok=True)
         
-        # Generate SOAP notes for each model
+        # Generate clinical notes for each model
         for model in MODELS:
-            print(f"Generating SOAP note for {file_path} using {model}")
-            try:
-                # Generate complete SOAP note
-                soap_note = NoteGenerationService.generate_note_from_transcript(
-                    transcript=transcription,
-                    model=model
-                )
-                
-                # Save final SOAP note
-                model_name = model.replace(":", "_")
-                output_file = output_path / f"{file_path.stem}_{model_name}.txt"
-                
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(soap_note)
-                print(f"Generated SOAP note saved to {output_file}")
-                
-            except Exception as e:
-                print(f"Failed to generate SOAP note for {file_path} using {model}: {e}")
+            print(f"Generating clinical note for {file_path} using {model}")
+            # Generate complete clinical note
+            clinical_note = NoteGenerationService.generate_note_from_transcript(
+                transcript=transcription,
+                model=model
+            )
+            
+            # Save final clinical note
+            model_name = model.replace(":", "_")
+            output_file = output_path / f"{file_path.stem}_{model_name}.txt"
+            
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(clinical_note)
+            print(f"Saved to: {output_file}")
+
                 
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
