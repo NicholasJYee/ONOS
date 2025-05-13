@@ -9,7 +9,7 @@ MODELS = [
     "llama3.2:3b",
     "gemma3:4b",
     "qwen2.5:3b",
-    "deepseek-r1:1.5b"
+    "deepseek-r1"
 ]
 
 def process_transcription_file(file_path: Path, output_base_path: Path) -> None:

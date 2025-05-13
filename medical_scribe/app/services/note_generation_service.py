@@ -55,12 +55,12 @@ class NoteGenerationService:
     )
 
     @staticmethod
-    def generate_note(transcript: str, model: str = 'deepseek-r1:1.5b', previous_note: str = None, is_complete: bool = True) -> str:
+    def generate_note(transcript: str, model: str, previous_note: str = None, is_complete: bool = True) -> str:
         """Generate a SOAP note from a medical transcript.
         
         Args:
             transcript: The medical conversation transcript
-            model: The LLM model to use (default: 'deepseek-r1:1.5b')
+            model: The LLM model to use
             previous_note: Optional previous SOAP note to update
             is_complete: Whether this is a complete transcript (default: True)
         """
@@ -122,7 +122,7 @@ class NoteGenerationService:
         return chunks
 
     @staticmethod
-    def clean_note(note: str, model: str = 'deepseek-r1:1.5b') -> str:
+    def clean_note(note: str, model: str) -> str:
         """Clean a generated note by removing incomplete sections and ensuring proper format.
         
         Args:
@@ -206,12 +206,12 @@ class NoteGenerationService:
         return cleaned_note
 
     @staticmethod
-    def generate_note_from_transcript(transcript: str, model: str = 'deepseek-r1:1.5b') -> str:
+    def generate_note_from_transcript(transcript: str, model: str) -> str:
         """Generate a complete SOAP note from a transcript, handling splitting and incremental updates.
         
         Args:
             transcript: The complete transcript text
-            model: The model to use for generation (default: 'deepseek-r1:1.5b')
+            model: The model to use for generation
             
         Returns:
             str: The complete SOAP note
