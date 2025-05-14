@@ -29,7 +29,7 @@ def process_audio():
         # Generate note using the new method that handles transcript splitting
         note = NoteGenerationService.generate_note_from_transcript(
             transcript=transcript,
-            model='deepseek-r1:1.5b'
+            model='deepseek-r1'
         )
         
         # Get the filename for download
