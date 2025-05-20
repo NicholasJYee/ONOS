@@ -20,16 +20,18 @@ def process_audio():
         return jsonify({'error': 'No selected file'}), 400
     
     try:
+        model = request.form.get('model')
+        
         # Save audio file
         audio_path = AudioService.save_audio(audio_file)
         
         # Transcribe audio
         transcript = TranscriptionService.transcribe_audio(audio_path, save_to_file=True)
         
-        # Generate note using the new method that handles transcript splitting
+        # Generate note using the specified model
         note = NoteGenerationService.generate_note_from_transcript(
             transcript=transcript,
-            model='deepseek-r1'
+            model=model
         )
         
         # Get the filename for download

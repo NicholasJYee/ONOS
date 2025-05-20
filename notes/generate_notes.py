@@ -6,10 +6,15 @@ from app.services.note_generation_service import NoteGenerationService
 
 # Models to use for generation
 MODELS = [
+    "deepseek-r1:7b",
+    "deepseek-r1:32b",
     "llama3.2:3b",
+    "llama3.1:8b",
     "gemma3:4b",
+    "gemma3:27b",
     "qwen2.5:3b",
-    "deepseek-r1"
+    "qwen3:32b",
+    "mistral-small3.1:24b"
 ]
 
 def process_transcription_file(file_path: Path, output_base_path: Path) -> None:

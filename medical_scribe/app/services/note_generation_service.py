@@ -11,7 +11,10 @@ class NoteGenerationService:
             "Convert the following doctor-patient conversation into a structured medical "
             "note following the clinical note format. Only include sections where relevant information "
             "is explicitly mentioned in the conversation. Each section should only appear if "
-            "there is specific information for it.\n\n"
+            "there is specific information for it.\n"
+            "If it is a follow-up appointment, you should include fewer sections and focus on updates "
+            "since their last visit and does not need to include medication history, family history, "
+            "social history, or review of systems.\n\n"
             "Available sections and their components:\n\n"
             "- Patient information (Name, Age, Gender, Address, Contact information)\n"
             "- Chief complaint (CC) or duration of follow-up\n"
@@ -39,18 +42,24 @@ class NoteGenerationService:
             "- Only include sections that have explicit information from the conversation\n"
             "- Omit any section entirely if no relevant information was discussed\n"
             "- Do not include placeholder text or assumptions\n"
-            "- Do not include any pre-amble or commentary"
+            "- Do not include any pre-amble or commentary\n"
+            "- Do not write your explanation for the note, only the note\n"
+            "- Do not include any other text, only the note\n"
+            "- Only include the note, no other text\n"
+            "- You may use markdown formatting, but do not include any other text, only the note\n"
         )
     }
 
     CLEANING_INSTRUCTIONS = (
         "Please clean the following medical note by:\n"
-        "1. Removing any sections marked with [Incomplete]\n"
+        "1. Removing any incomplete sections\n"
         "2. Removing any preamble or commentary before 'Patient information'\n"
         "3. Ensuring the note starts with 'Patient information'\n"
         "4. Maintaining the clinical note format structure\n"
-        "5. Only including sections with actual content\n\n"
-        "If the note doesn't start with 'Patient information' or contains [Incomplete] sections, "
+        "5. Only including sections with actual content\n"
+        "6. Do not include any other text, only the note\n"
+        "7. Do not write your explanation for the note or tell me that you are doing it, only give me the note\n"
+        "If the note doesn't start with 'Patient information' or contains incomplete sections, "
         "please regenerate it following these requirements."
     )
 
@@ -73,12 +82,12 @@ class NoteGenerationService:
                     "Maintain the existing structure while adding or modifying relevant details. "
                     "Ensure consistency between old and new information. "
                     "Remove any sections that does not have any information."
+                    "Do not include any other text, only the note"
                 )
 
             if not is_complete:
                 system_message['content'] += (
-                    "\n\nNote: This is a partial conversation. Mark sections that may be incomplete "
-                    "with '[Incomplete]' at the end of the section."
+                    "\n\nNote: This is a partial conversation and the note will be updated with the new information afterwards."
                 )
 
             messages = [system_message]
@@ -101,10 +110,6 @@ class NoteGenerationService:
             
             note_content = response['message']['content']
             
-            # Remove reasoning tokens for deepseek models
-            if "deepseek" in model and "</think>" in note_content:
-                note_content = note_content.split("</think>", 1)[1].strip()
-                
             return note_content
         except Exception as e:
             raise Exception(f"Note generation failed: {str(e)}")
@@ -122,30 +127,19 @@ class NoteGenerationService:
         return chunks
 
     @staticmethod
-    def clean_note(note: str, model: str) -> str:
+    def clean_note(cleaned_note: str, model: str) -> str:
         """Clean a generated note by removing incomplete sections and ensuring proper format.
         
         Args:
-            note: The note to clean
+            cleaned_note: The note to clean
             model: The LLM model to use for cleaning
             
         Returns:
             str: The cleaned note
         """
-        messages = [
-            {'role': 'system', 'content': NoteGenerationService.CLEANING_INSTRUCTIONS},
-            {'role': 'user', 'content': note}
-        ]
-        
-        response = ollama.chat(
-            model=model,
-            messages=messages
-        )
-        
-        cleaned_note = response['message']['content']
         
         # Remove reasoning tokens for deepseek models
-        if "deepseek" in model and "</think>" in cleaned_note:
+        if "</think>" in cleaned_note:
             cleaned_note = cleaned_note.split("</think>", 1)[1].strip()
         
         # Strip formatting from the start of the note
@@ -175,7 +169,7 @@ class NoteGenerationService:
         
         if "[Incomplete]" in cleaned_note:
             incomplete_sections = [line for line in cleaned_note.split('\n') if "[Incomplete]" in line]
-            issues.append(f"The following sections are marked as incomplete: {', '.join(incomplete_sections)}")
+            issues.append(f"The following sections includes [Incomplete]. It should be removed: {', '.join(incomplete_sections)}")
         
         if issues:
             print(f"Found issues in note: {'; '.join(issues)}")
@@ -220,6 +214,8 @@ class NoteGenerationService:
             Exception: If note generation fails
         """
         try:
+            print(f"Generating note with model: {model}")
+
             # Split transcript into chunks
             transcript_chunks = NoteGenerationService.split_transcript(transcript)
             

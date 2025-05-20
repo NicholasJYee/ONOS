@@ -7,7 +7,7 @@ from app.services.transcription_service import TranscriptionService
 def transcribe_mock_interviews():
     # Define paths
     input_dir = Path("interviews/mock_interviews")
-    output_dir = Path("interviews/data/mock_interviews/mock_interviews")
+    output_dir = Path("interviews/data/mock_interviews")
     
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
