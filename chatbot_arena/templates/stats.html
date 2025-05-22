@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chatbot Arena - Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LLM Chatbot Arena - Statistics</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="button secondary">Home</a>
+                <a href="{{ url_for('arena') }}" class="button primary">Back to Arena</a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="stats-summary">
+                <h2>Overall Stats</h2>
+                <div class="stats-boxes">
+                    <div class="stats-box">
+                        <h3>Total Comparisons</h3>
+                        <p class="stats-number">{{ total_matches }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-detailed">
+                <h2>Model Performance</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Model</th>
+                            <th>ELO Rating</th>
+                            <th>Win Rate</th>
+                            <th>Matches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in sorted_models %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ model }}</td>
+                            <td>{{ ratings[model]|round|int }}</td>
+                            <td>{{ "%.1f"|format(win_rates[model]) }}%</td>
+                            <td>{{ match_counts[model] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Chatbot Arena - Comparing LLM Outputs</p>
+        </footer>
+    </div>
+</body>
+</html> 

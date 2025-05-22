@@ -27,8 +27,9 @@ DEFAULT_RATING = 1200  # Starting ELO rating for each model
 RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'ratings.json')
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), 'history.json')
 
-# Data directory with responses
+# Data directories
 RESPONSES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'notes', 'data')
+PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'interviews', 'data')
 
 # Initialize or load ratings
 def load_ratings():
@@ -77,36 +78,36 @@ def update_elo(rating_a, rating_b, result):
     
     return new_rating_a, new_rating_b
 
-# Get all prompts from the responses directory
+# Get all prompts from the prompts directory
 def get_prompts():
-    prompts = set()
+    prompts = []
     
-    if not os.path.exists(RESPONSES_DIR):
-        os.makedirs(RESPONSES_DIR)
+    if not os.path.exists(PROMPTS_DIR):
+        os.makedirs(PROMPTS_DIR)
         return []
     
-    # Walk through all subdirectories in notes/data
-    for root, dirs, files in os.walk(RESPONSES_DIR):
+    # Read prompts from interviews/data directory
+    for root, dirs, files in os.walk(PROMPTS_DIR):
         for file in files:
             if file.endswith('.txt'):
-                # Extract prompt from filename (part before first underscore)
-                parts = file.split('_', 1)  # Split at first underscore
-                if len(parts) > 1:
-                    prompt = parts[0]
-                    prompts.add(prompt)
+                prompt_path = os.path.join(root, file)
+                with open(prompt_path, 'r') as f:
+                    prompt_text = f.read().strip()
+                    prompt_id = os.path.splitext(file)[0]  # Use filename without extension as ID
+                    prompts.append({'id': prompt_id, 'text': prompt_text})
     
-    return list(prompts)
+    return prompts
 
 # Find all response files for a given prompt
-def find_response_files(prompt):
+def find_response_files(prompt_id):
     response_files = {}
     
     # Walk through all subdirectories in notes/data
     for root, dirs, files in os.walk(RESPONSES_DIR):
         for file in files:
-            if file.endswith('.txt') and file.startswith(f"{prompt}_"):
+            if file.endswith('.txt') and file.startswith(f"{prompt_id}_"):
                 # Extract model name from filename (part after first underscore, before .txt)
-                model_name = file[len(prompt) + 1:].split('.txt')[0]
+                model_name = file[len(prompt_id) + 1:].split('.txt')[0]
                 if model_name in MODELS:
                     response_files[model_name] = os.path.join(root, file)
     
@@ -128,17 +129,19 @@ def arena():
     prompts = get_prompts()
     
     if not prompts:
-        return render_template('error.html', message="No prompts found. Please add response files to the 'notes/data' directory.")
+        return render_template('error.html', message="No prompts found. Please add prompt files to the 'interviews/data' directory.")
     
     # Randomly select a prompt
     selected_prompt = random.choice(prompts)
+    prompt_id = selected_prompt['id']
+    prompt_text = selected_prompt['text']
     
     # Get all model responses for this prompt
-    response_files = find_response_files(selected_prompt)
+    response_files = find_response_files(prompt_id)
     available_models = list(response_files.keys())
     
     if len(available_models) < 2:
-        return render_template('error.html', message=f"Not enough model responses for prompt '{selected_prompt}'")
+        return render_template('error.html', message=f"Not enough model responses for prompt '{prompt_id}'")
     
     # Randomly select two different models
     model_a, model_b = random.sample(available_models, 2)
@@ -151,7 +154,7 @@ def arena():
         response_b = f.read()
     
     return render_template('arena.html', 
-                           prompt=selected_prompt,
+                           prompt=prompt_text,
                            response_a=response_a,
                            response_b=response_b,
                            model_a=model_a,
@@ -255,4 +258,4 @@ def stats():
                            total_matches=len(history))
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)

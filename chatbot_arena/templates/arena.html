@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chatbot Arena - Voting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .prompt-text {
+            font-size: 0.9em;
+            font-weight: normal;
+            margin-top: 8px;
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        .markdown-content {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+        }
+        .markdown-content pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .markdown-content code {
+            font-family: "Courier New", monospace;
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        .markdown-content th, .markdown-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .markdown-content th {
+            background-color: #f2f2f2;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 15px;
+            color: #666;
+            margin: 15px 0;
+        }
+        /* Fix for bullet points extending outside container */
+        .markdown-content ul, 
+        .markdown-content ol {
+            padding-left: 25px;
+            margin-left: 0;
+        }
+        .response-content {
+            padding: 15px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LLM Chatbot Arena</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="button secondary">Home</a>
+                <a href="{{ url_for('stats') }}" class="button secondary">View Stats</a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="prompt-container">
+                <h2>Prompt:</h2>
+                <div class="prompt-text">{{ prompt }}</div>
+            </div>
+            
+            <div class="responses-container">
+                <div class="response-card" id="response-a" data-model="{{ model_a }}">
+                    <div class="response-header">
+                        <h3>Response A</h3>
+                    </div>
+                    <div class="response-content">
+                        <div class="markdown-content" id="response-a-markdown"></div>
+                    </div>
+                    <div class="vote-button">
+                        <button onclick="vote('a')">I prefer this response</button>
+                    </div>
+                </div>
+                
+                <div class="response-card" id="response-b" data-model="{{ model_b }}">
+                    <div class="response-header">
+                        <h3>Response B</h3>
+                    </div>
+                    <div class="response-content">
+                        <div class="markdown-content" id="response-b-markdown"></div>
+                    </div>
+                    <div class="vote-button">
+                        <button onclick="vote('b')">I prefer this response</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="undo-button" class="button secondary" onclick="undoLastVote()">Undo Last Vote</button>
+                <button id="skip-button" class="button primary" onclick="location.reload()">Skip / Next Pair</button>
+            </div>
+            
+            <div id="result-message" class="hidden"></div>
+        </main>
+        
+        <footer>
+            <p>Chatbot Arena - Comparing LLM Outputs</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Store information about the models
+        const modelA = "{{ model_a }}";
+        const modelB = "{{ model_b }}";
+        const prompt = "{{ prompt }}";
+        const responseA = `{{ response_a|safe }}`;
+        const responseB = `{{ response_b|safe }}`;
+        
+        // Configure marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            sanitize: false
+        });
+        
+        // Render Markdown
+        document.getElementById('response-a-markdown').innerHTML = marked.parse(responseA);
+        document.getElementById('response-b-markdown').innerHTML = marked.parse(responseB);
+        
+        // Add hover effect
+        const responseCards = document.querySelectorAll('.response-card');
+        responseCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('elevated');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('elevated');
+            });
+        });
+        
+        // Handle vote
+        function vote(choice) {
+            let winner, loser;
+            
+            if (choice === 'a') {
+                winner = modelA;
+                loser = modelB;
+            } else {
+                winner = modelB;
+                loser = modelA;
+            }
+            
+            fetch('/vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    winner: winner,
+                    loser: loser,
+                    prompt: prompt,
+                    timestamp: new Date().toISOString()
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const resultMessage = document.getElementById('result-message');
+                    resultMessage.innerHTML = `You voted for <strong>${winner}</strong> over <strong>${loser}</strong>. <br>
+                                              New ratings: ${winner}: ${Math.round(data.new_winner_rating)}, 
+                                              ${loser}: ${Math.round(data.new_loser_rating)}`;
+                    resultMessage.classList.remove('hidden');
+                    
+                    // Disable vote buttons
+                    document.querySelectorAll('.vote-button button').forEach(btn => {
+                        btn.disabled = true;
+                    });
+                    
+                    // Highlight the chosen response
+                    document.getElementById(choice === 'a' ? 'response-a' : 'response-b').classList.add('selected');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        // Handle undo
+        function undoLastVote() {
+            fetch('/undo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const resultMessage = document.getElementById('result-message');
+                    resultMessage.innerHTML = `Undid last vote: <strong>${data.undone_match.winner}</strong> vs <strong>${data.undone_match.loser}</strong>`;
+                    resultMessage.classList.remove('hidden');
+                    
+                    // Refresh the page after a short delay
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('index') }}";
+                    }, 2000);
+                } else {
+                    const resultMessage = document.getElementById('result-message');
+                    resultMessage.innerHTML = data.message;
+                    resultMessage.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html> 

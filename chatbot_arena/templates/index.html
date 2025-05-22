@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chatbot Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LLM Chatbot Arena</h1>
+            <p>Compare outputs from different open-source language models</p>
+            <div class="nav-buttons">
+                <a href="{{ url_for('arena') }}" class="button primary">Start Voting</a>
+                <a href="{{ url_for('stats') }}" class="button secondary">View Stats</a>
+            </div>
+        </header>
+        
+        <main>
+            <section class="leaderboard">
+                <h2>Current Leaderboard</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Model</th>
+                            <th>ELO Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model, rating in ratings %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ model }}</td>
+                            <td>{{ rating|round|int }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            
+            <section class="recent-matches">
+                <h2>Recent Matches</h2>
+                {% if history %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Prompt</th>
+                            <th>Winner</th>
+                            <th>Loser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in history|reverse %}
+                        <tr>
+                            <td>{{ match.prompt }}</td>
+                            <td>{{ match.winner }}</td>
+                            <td>{{ match.loser }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No matches recorded yet. Start voting to see results!</p>
+                {% endif %}
+            </section>
+        </main>
+        
+        <footer>
+            <p>Chatbot Arena - Comparing LLM Outputs</p>
+        </footer>
+    </div>
+</body>
+</html> 

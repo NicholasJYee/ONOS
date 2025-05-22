@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chatbot Arena - Error</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LLM Chatbot Arena</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="button secondary">Home</a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="error-container">
+                <h2>Error</h2>
+                <div class="error-message">
+                    <p>{{ message }}</p>
+                </div>
+                <div class="nav-buttons">
+                    <a href="{{ url_for('index') }}" class="button primary">Return to Home</a>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Chatbot Arena - Comparing LLM Outputs</p>
+        </footer>
+    </div>
+</body>
+</html> 
