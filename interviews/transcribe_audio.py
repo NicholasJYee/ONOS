@@ -28,13 +28,18 @@ def transcribe_mock_interviews():
     # Process each audio file
     for audio_file in audio_files:
         try:
+            # Create output filename (same name as input but with .txt extension)
+            output_file = output_dir / f"{audio_file.stem}.txt"
+            
+            # Check if transcript already exists
+            if output_file.exists():
+                print(f"Skipping {audio_file.name}: transcript already exists")
+                continue
+                
             print(f"Processing {audio_file.name}...")
             
             # Transcribe the audio
             transcript = TranscriptionService.transcribe_audio(str(audio_file))
-            
-            # Create output filename (same name as input but with .txt extension)
-            output_file = output_dir / f"{audio_file.stem}.txt"
             
             # Save the transcript
             with open(output_file, 'w', encoding='utf-8') as f:

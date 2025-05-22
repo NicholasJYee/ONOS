@@ -38,5 +38,15 @@
     "loser_old_rating": 1200,
     "winner_new_rating": 1216.7023986633528,
     "loser_new_rating": 1184.0339081301693
+  },
+  {
+    "timestamp": "2025-05-22T21:18:00.521Z",
+    "prompt_id": "The Weston Center For Cosmetic Surgery 27",
+    "winner": "gemma3_27b",
+    "loser": "qwen3_32b",
+    "winner_old_rating": 1216.7023986633528,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1231.9338167652902,
+    "loser_new_rating": 1184.7685818980626
   }
 ]

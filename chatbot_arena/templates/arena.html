@@ -119,6 +119,7 @@
         const modelA = "{{ model_a }}";
         const modelB = "{{ model_b }}";
         const prompt = "{{ prompt }}";
+        const promptId = "{{ prompt_id }}";
         const responseA = `{{ response_a|safe }}`;
         const responseB = `{{ response_b|safe }}`;
         
@@ -166,7 +167,7 @@
                 body: JSON.stringify({
                     winner: winner,
                     loser: loser,
-                    prompt: prompt,
+                    prompt_id: promptId,
                     timestamp: new Date().toISOString()
                 }),
             })

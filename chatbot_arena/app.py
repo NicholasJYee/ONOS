@@ -155,6 +155,7 @@ def arena():
     
     return render_template('arena.html', 
                            prompt=prompt_text,
+                           prompt_id=prompt_id,
                            response_a=response_a,
                            response_b=response_b,
                            model_a=model_a,
@@ -165,7 +166,7 @@ def vote():
     data = request.get_json()
     winner = data.get('winner')
     loser = data.get('loser')
-    prompt = data.get('prompt')
+    prompt_id = data.get('prompt_id')
     
     # Load current ratings
     old_ratings = load_ratings()
@@ -181,7 +182,7 @@ def vote():
     history = load_history()
     history.append({
         'timestamp': data.get('timestamp'),
-        'prompt': prompt,
+        'prompt_id': prompt_id,
         'winner': winner,
         'loser': loser,
         'winner_old_rating': old_ratings[winner],

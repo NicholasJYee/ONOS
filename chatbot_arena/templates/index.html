@@ -10,7 +10,7 @@
     <div class="container">
         <header>
             <h1>LLM Chatbot Arena</h1>
-            <p>Compare outputs from different open-source language models</p>
+            <p>Compare outputs from different open-source language models. Built by Nicholas J. Yee.</p>
             <div class="nav-buttons">
                 <a href="{{ url_for('arena') }}" class="button primary">Start Voting</a>
                 <a href="{{ url_for('stats') }}" class="button secondary">View Stats</a>
@@ -54,7 +54,7 @@
                     <tbody>
                         {% for match in history|reverse %}
                         <tr>
-                            <td>{{ match.prompt }}</td>
+                            <td>{{ match.prompt_id }}</td>
                             <td>{{ match.winner }}</td>
                             <td>{{ match.loser }}</td>
                         </tr>

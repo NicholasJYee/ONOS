@@ -65,14 +65,22 @@ def main():
     # Create notes data directory if it doesn't exist
     notes_path.mkdir(parents=True, exist_ok=True)
     
-    # Process all transcription files
+    # Get all transcription files and sort them
     print(f"Looking for files in {interviews_path}")
+    transcription_files = []
     for root, _, files in os.walk(interviews_path):
         for file in files:
             if file.endswith('.txt'):
-                print(f"Processing {file}")
                 file_path = Path(root) / file
-                process_transcription_file(file_path, notes_path)
+                transcription_files.append(file_path)
+    
+    # Sort files by path
+    transcription_files.sort()
+    
+    # Process files in sorted order
+    for file_path in transcription_files:
+        print(f"Processing {file_path.name}")
+        process_transcription_file(file_path, notes_path)
 
 if __name__ == "__main__":
     main()
