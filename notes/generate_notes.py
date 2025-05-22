@@ -33,6 +33,15 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
         
         # Generate clinical notes for each model
         for model in MODELS:
+            # Create model-specific output filename
+            model_name = model.replace(":", "_")
+            output_file = output_path / f"{file_path.stem}_{model_name}.txt"
+            
+            # Skip if the file already exists
+            if output_file.exists():
+                print(f"Skipping {output_file} - already exists")
+                continue
+                
             print(f"Generating clinical note for {file_path} using {model}")
             # Generate complete clinical note
             clinical_note = NoteGenerationService.generate_note_from_transcript(
@@ -41,9 +50,6 @@ def process_transcription_file(file_path: Path, output_base_path: Path) -> None:
             )
             
             # Save final clinical note
-            model_name = model.replace(":", "_")
-            output_file = output_path / f"{file_path.stem}_{model_name}.txt"
-            
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(clinical_note)
             print(f"Saved to: {output_file}")
