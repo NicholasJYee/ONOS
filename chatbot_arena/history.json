@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2025-05-22T18:07:05.823Z",
+    "prompt": "The Weston Center For Cosmetic Surgery 35",
+    "winner": "mistral-small3.1_24b",
+    "loser": "gemma3_27b",
+    "winner_old_rating": 1200,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1216.0,
+    "loser_new_rating": 1184.0
+  },
+  {
+    "timestamp": "2025-05-22T18:07:47.679Z",
+    "prompt": "New Recording 37",
+    "winner": "llama3.2_3b",
+    "loser": "llama3.1_8b",
+    "winner_old_rating": 1200,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1216.0,
+    "loser_new_rating": 1184.0
+  },
+  {
+    "timestamp": "2025-05-22T18:11:35.316Z",
+    "prompt": "The Weston Center For Cosmetic Surgery 15",
+    "winner": "gemma3_27b",
+    "loser": "deepseek-r1_7b",
+    "winner_old_rating": 1184.0,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1200.736306793522,
+    "loser_new_rating": 1183.263693206478
+  }
+]

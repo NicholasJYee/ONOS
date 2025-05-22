@@ -140,7 +140,6 @@ tbody tr:hover {
 }
 
 .response-card.elevated {
-    transform: translateY(-5px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -156,8 +155,7 @@ tbody tr:hover {
 
 .response-content {
     flex-grow: 1;
-    overflow-y: auto;
-    max-height: 400px;
+    overflow-y: visible;
     padding: 10px;
     background-color: #f9f9f9;
     border-radius: 4px;
@@ -266,6 +264,6 @@ tbody tr:hover {
     }
     
     .response-content {
-        max-height: 300px;
+        overflow-y: visible;
     }
 } 
