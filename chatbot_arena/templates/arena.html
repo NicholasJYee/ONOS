@@ -176,7 +176,7 @@
                 if (data.success) {
                     const resultMessage = document.getElementById('result-message');
                     resultMessage.innerHTML = `You voted for <strong>${winner}</strong> over <strong>${loser}</strong>. <br>
-                                              New ratings: ${winner}: ${Math.round(data.new_winner_rating)}, 
+                                              New general ratings: ${winner}: ${Math.round(data.new_winner_rating)}, 
                                               ${loser}: ${Math.round(data.new_loser_rating)}`;
                     resultMessage.classList.remove('hidden');
                     
@@ -187,6 +187,8 @@
                     
                     // Highlight the chosen response
                     document.getElementById(choice === 'a' ? 'response-a' : 'response-b').classList.add('selected');
+                } else {
+                    console.error('Vote failed:', data);
                 }
             })
             .catch(error => {

@@ -19,7 +19,7 @@
         
         <main>
             <section class="leaderboard">
-                <h2>Current Leaderboard</h2>
+                <h2>General Leaderboard</h2>
                 <table>
                     <thead>
                         <tr>
@@ -29,7 +29,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for model, rating in ratings %}
+                        {% for model, rating in general_leaderboard %}
                         <tr>
                             <td>{{ loop.index }}</td>
                             <td>{{ model }}</td>

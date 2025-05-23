@@ -3,6 +3,7 @@ import random
 import json
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import math
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -25,6 +26,8 @@ DEFAULT_RATING = 1200  # Starting ELO rating for each model
 
 # Store ratings and match history
 RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'ratings.json')
+CONSULT_RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'consult_ratings.json')
+FOLLOWUP_RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'followup_ratings.json')
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), 'history.json')
 
 # Data directories
@@ -32,10 +35,18 @@ RESPONSES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'notes'
 PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'interviews', 'data')
 
 # Initialize or load ratings
-def load_ratings():
-    if os.path.exists(RATINGS_FILE):
-        with open(RATINGS_FILE, 'r') as f:
+# Separate ratings for general, consult, and follow-up
+def load_ratings(rating_type='general'):
+    ratings_map = {
+        'general': RATINGS_FILE,
+        'consult': CONSULT_RATINGS_FILE,
+        'followup': FOLLOWUP_RATINGS_FILE
+    }
+    ratings_file = ratings_map[rating_type]
+    if os.path.exists(ratings_file):
+        with open(ratings_file, 'r') as f:
             return json.load(f)
+
     return {model: DEFAULT_RATING for model in MODELS}
 
 # Initialize or load history
@@ -45,9 +56,15 @@ def load_history():
             return json.load(f)
     return []
 
-# Save ratings to file
-def save_ratings(ratings):
-    with open(RATINGS_FILE, 'w') as f:
+# Save ratings based on type
+def save_ratings(ratings, rating_type='general'):
+    ratings_map = {
+        'general': RATINGS_FILE,
+        'consult': CONSULT_RATINGS_FILE,
+        'followup': FOLLOWUP_RATINGS_FILE
+    }
+    ratings_file = ratings_map[rating_type]
+    with open(ratings_file, 'w') as f:
         json.dump(ratings, f, indent=2)
 
 # Save history to file
@@ -113,16 +130,30 @@ def find_response_files(prompt_id):
     
     return response_files
 
+# Load Excel data for prompt types and lengths
+def load_excel_data():
+    excel_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data_info', 'Fake OSCEs.xlsx')
+    df = pd.read_excel(excel_path)
+    return df[['file_name', 'type', 'length_s']]
+
 @app.route('/')
 def index():
     # Get ratings for displaying leaderboard
-    ratings = load_ratings()
-    sorted_ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+    general_ratings = load_ratings('general')
+    consult_ratings = load_ratings('consult')
+    followup_ratings = load_ratings('followup')
+    sorted_general = sorted(general_ratings.items(), key=lambda x: x[1], reverse=True)
+    sorted_consult = sorted(consult_ratings.items(), key=lambda x: x[1], reverse=True)
+    sorted_followup = sorted(followup_ratings.items(), key=lambda x: x[1], reverse=True)
     
     # Get match history
     history = load_history()
     
-    return render_template('index.html', ratings=sorted_ratings, history=history[-10:])
+    return render_template('index.html', 
+                           general_leaderboard=sorted_general,
+                           consult_leaderboard=sorted_consult,
+                           followup_leaderboard=sorted_followup,
+                           history=history[-10:])
 
 @app.route('/arena')
 def arena():
@@ -168,15 +199,25 @@ def vote():
     loser = data.get('loser')
     prompt_id = data.get('prompt_id')
     
-    # Load current ratings
-    old_ratings = load_ratings()
+    # Load Excel data
+    excel_data = load_excel_data()
+    prompt_type = excel_data[excel_data['file_name'] == prompt_id]['type'].values[0]
+    length_s = int(excel_data[excel_data['file_name'] == prompt_id]['length_s'].values[0])
+    
+    # Load current ratings based on type
+    old_ratings = load_ratings(prompt_type)
     new_ratings = old_ratings.copy()
+
+    old_general_rating = load_ratings('general')
+    new_general_rating = old_general_rating.copy()
     
     # Update ELO ratings
     new_ratings[winner], new_ratings[loser] = update_elo(old_ratings[winner], old_ratings[loser], 1)
-    
+    new_general_rating[winner], new_general_rating[loser] = update_elo(old_general_rating[winner], old_general_rating[loser], 1)
+
     # Save updated ratings
-    save_ratings(new_ratings)
+    save_ratings(new_ratings, prompt_type)
+    save_ratings(new_general_rating, 'general')
     
     # Record match in history
     history = load_history()
@@ -185,24 +226,28 @@ def vote():
         'prompt_id': prompt_id,
         'winner': winner,
         'loser': loser,
-        'winner_old_rating': old_ratings[winner],
-        'loser_old_rating': old_ratings[loser],
-        'winner_new_rating': new_ratings[winner],
-        'loser_new_rating': new_ratings[loser]
+        'winner_old_rating': int(old_ratings[winner]),
+        'loser_old_rating': int(old_ratings[loser]),
+        'winner_new_rating': int(new_ratings[winner]),
+        'loser_new_rating': int(new_ratings[loser]),
+        'length_s': length_s,
+        'type': prompt_type
     })
     save_history(history)
     
     return jsonify({
         'success': True,
-        'new_winner_rating': new_ratings[winner],
-        'new_loser_rating': new_ratings[loser]
+        'new_winner_rating': new_general_rating[winner],
+        'new_loser_rating': new_general_rating[loser]
     })
 
 @app.route('/undo', methods=['POST'])
 def undo():
     # Load history and ratings
     history = load_history()
-    ratings = load_ratings()
+    general_ratings = load_ratings('general')
+    consult_ratings = load_ratings('consult')
+    followup_ratings = load_ratings('followup')
     
     if not history:
         return jsonify({'success': False, 'message': 'No history to undo'})
@@ -213,16 +258,27 @@ def undo():
     
     # Reset ratings to default if this is the only entry
     if not history:
-        ratings = {model: DEFAULT_RATING for model in MODELS}
+        general_ratings = {model: DEFAULT_RATING for model in MODELS}
+        consult_ratings = {model: DEFAULT_RATING for model in MODELS}
+        followup_ratings = {model: DEFAULT_RATING for model in MODELS}
     else:
         # Recalculate all ratings from scratch
-        ratings = {model: DEFAULT_RATING for model in MODELS}
+        general_ratings = {model: DEFAULT_RATING for model in MODELS}
+        consult_ratings = {model: DEFAULT_RATING for model in MODELS}
+        followup_ratings = {model: DEFAULT_RATING for model in MODELS}
         for match in history:
             winner = match['winner']
             loser = match['loser']
-            ratings[winner], ratings[loser] = update_elo(ratings[winner], ratings[loser], 1)
+            match_type = match['type']
+            general_ratings[winner], general_ratings[loser] = update_elo(general_ratings[winner], general_ratings[loser], 1)
+            if match_type == 'consult':
+                consult_ratings[winner], consult_ratings[loser] = update_elo(consult_ratings[winner], consult_ratings[loser], 1)
+            elif match_type == 'followup':
+                followup_ratings[winner], followup_ratings[loser] = update_elo(followup_ratings[winner], followup_ratings[loser], 1)
     
-    save_ratings(ratings)
+    save_ratings(general_ratings, 'general')
+    save_ratings(consult_ratings, 'consult')
+    save_ratings(followup_ratings, 'followup')
     
     return jsonify({
         'success': True,
@@ -231,31 +287,47 @@ def undo():
 
 @app.route('/stats')
 def stats():
-    ratings = load_ratings()
+    general_ratings = load_ratings('general')
+    consult_ratings = load_ratings('consult')
+    followup_ratings = load_ratings('followup')
     history = load_history()
     
     # Calculate win rates for each model
-    win_counts = {model: 0 for model in MODELS}
-    match_counts = {model: 0 for model in MODELS}
+    win_counts = {model: {'general': 0, 'consult': 0, 'followup': 0} for model in MODELS}
+    match_counts = {model: {'general': 0, 'consult': 0, 'followup': 0} for model in MODELS}
     
     for match in history:
         winner = match['winner']
         loser = match['loser']
-        win_counts[winner] += 1
-        match_counts[winner] += 1
-        match_counts[loser] += 1
+        match_type = match['type']
+        win_counts[winner][match_type] += 1
+        match_counts[winner][match_type] += 1
+        match_counts[loser][match_type] += 1
+        # General = consult + followup
+        win_counts[winner]['general'] += 1
+        match_counts[winner]['general'] += 1
+        match_counts[loser]['general'] += 1
     
-    win_rates = {model: (win_counts[model] / match_counts[model]) * 100 if match_counts[model] > 0 else 0 
-                for model in MODELS}
+    win_rates = {model: {
+        'general': (win_counts[model]['general'] / match_counts[model]['general']) * 100 if match_counts[model]['general'] > 0 else 0,
+        'consult': (win_counts[model]['consult'] / match_counts[model]['consult']) * 100 if match_counts[model]['consult'] > 0 else 0,
+        'followup': (win_counts[model]['followup'] / match_counts[model]['followup']) * 100 if match_counts[model]['followup'] > 0 else 0
+    } for model in MODELS}
     
     # Sort models by ELO rating
-    sorted_models = sorted(MODELS, key=lambda model: ratings[model], reverse=True)
+    sorted_general = sorted(MODELS, key=lambda model: general_ratings[model], reverse=True)
+    sorted_consult = sorted(MODELS, key=lambda model: consult_ratings[model], reverse=True)
+    sorted_followup = sorted(MODELS, key=lambda model: followup_ratings[model], reverse=True)
     
     return render_template('stats.html', 
-                           ratings=ratings, 
+                           general_ratings=general_ratings, 
+                           consult_ratings=consult_ratings, 
+                           followup_ratings=followup_ratings, 
                            win_rates=win_rates,
                            match_counts=match_counts,
-                           sorted_models=sorted_models,
+                           sorted_general=sorted_general,
+                           sorted_consult=sorted_consult,
+                           sorted_followup=sorted_followup,
                            total_matches=len(history))
 
 if __name__ == '__main__':

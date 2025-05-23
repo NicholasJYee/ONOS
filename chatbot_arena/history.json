@@ -1,52 +1,50 @@
 [
   {
-    "timestamp": "2025-05-22T18:07:05.823Z",
-    "prompt": "The Weston Center For Cosmetic Surgery 35",
+    "timestamp": "2025-05-23T18:56:51.720Z",
+    "prompt_id": "New Recording 42",
+    "winner": "llama3.1_8b",
+    "loser": "llama3.2_3b",
+    "winner_old_rating": 1200,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1216,
+    "loser_new_rating": 1184,
+    "length_s": 468,
+    "type": "consult"
+  },
+  {
+    "timestamp": "2025-05-23T19:04:09.298Z",
+    "prompt_id": "New Recording 65",
+    "winner": "mistral-small3.1_24b",
+    "loser": "deepseek-r1_7b",
+    "winner_old_rating": 1200,
+    "loser_old_rating": 1200,
+    "winner_new_rating": 1216,
+    "loser_new_rating": 1184,
+    "length_s": 256,
+    "type": "followup"
+  },
+  {
+    "timestamp": "2025-05-23T19:05:02.871Z",
+    "prompt_id": "The Weston Center For Cosmetic Surgery 26",
     "winner": "mistral-small3.1_24b",
     "loser": "gemma3_27b",
     "winner_old_rating": 1200,
     "loser_old_rating": 1200,
-    "winner_new_rating": 1216.0,
-    "loser_new_rating": 1184.0
+    "winner_new_rating": 1216,
+    "loser_new_rating": 1184,
+    "length_s": 397,
+    "type": "consult"
   },
   {
-    "timestamp": "2025-05-22T18:07:47.679Z",
-    "prompt": "New Recording 37",
-    "winner": "llama3.2_3b",
-    "loser": "llama3.1_8b",
+    "timestamp": "2025-05-23T19:05:13.195Z",
+    "prompt_id": "The Weston Center For Cosmetic Surgery 41",
+    "winner": "llama3.1_8b",
+    "loser": "deepseek-r1_32b",
     "winner_old_rating": 1200,
     "loser_old_rating": 1200,
-    "winner_new_rating": 1216.0,
-    "loser_new_rating": 1184.0
-  },
-  {
-    "timestamp": "2025-05-22T18:11:35.316Z",
-    "prompt": "The Weston Center For Cosmetic Surgery 15",
-    "winner": "gemma3_27b",
-    "loser": "deepseek-r1_7b",
-    "winner_old_rating": 1184.0,
-    "loser_old_rating": 1200,
-    "winner_new_rating": 1200.736306793522,
-    "loser_new_rating": 1183.263693206478
-  },
-  {
-    "timestamp": "2025-05-22T18:32:00.472Z",
-    "prompt": "Hi there I&#39;m Dr. Patel thank you so much for being here with us today Mr. Dev, are you beginking confirm your name and age? Yes sure I&#39;m John Doe and I&#39;m 65 years old. Alright thank you Mr. Dev, so you presented to the emergency department after slipping on my ground while gardening at home and falling onto your right side. Can you tell me a little bit more about what happened and how you&#39;re feeling now? Yeah so I was gardening I slipped on some wet ground, fell right onto my right shoulder, this pain wasn&#39;t me and shop I can&#39;t really move on. This happened about three years hours ago. I understand, do you have anything to begin past medical history chronicle? This is any other medical conditions that actually do you wear a robe? Well I do have hypertension but it&#39;s controlled medication, no history of diabetes or heart disease. I also surgery for lip hip fracture about five years ago but it&#39;s been fine ever since. Okay and heavy how do you pass surgery beside the hip? Just had an open hip reduction in internal fixation five years ago. Okay good any other kind of medications that you&#39;re taking? Just like synopro from my blood pressure, no other medications though. Alright so any no drug allergies? No no no. Thank you and for social history you&#39;re a retired construction worker right? Yes sir. Okay are you smoker and do you drink alcohol? No smoking, I do drink socially though just like one to two drinks per week though. Alright so thank you for that information and now you may tend to act like style with regular gardening and walk as your primary firms at exercise. Yeah we are I like to say active. Alright so now I&#39;d like to perform a physical exam of your shoulder to assist injuries that are right with you. Yes of course please. Okay so looks like you&#39;re all are oriented up here in a little bit of distress because of the pain your vital signs are definitely stable. Your blood pressure is 130 over 85. Slightly high actually not really. So your heart rate is let&#39;s see 76 respiratory rate is 14 breast permanent and temperature 96.98.6 Fahrenheit. Looking at your right shoulder I&#39;m noting evident deformity of your right shoulder with swelling and bruising in the proximal region. Your range of motion is limited because of pain seems like you can&#39;t really a duct to raise your arm out to the side or even like externally rotate your arm. Upon palpation it seems like there&#39;s no creptis which is a grinding sensation but there is tenderness over the greater tuberosity areas. Can you perform any strength exercises on your right shoulder? No the pain is too severe. Okay I understand we won&#39;t try any moral strength testing. So we performed some special tests. The impingement and load and shift tests were positive indicated that possible. He were in displacement. The good news is I didn&#39;t find any kind of nerve-ascular deficits in your effective arm meaning that your blood flow and nerve function seems normal. So thank you for that. We&#39;ve taken the x-rays they confirmed the displacement of the greater tuberosity on the APV with the evidence of cortical disruption consistent with a proximal chemorinspector. We also can see kind of like a comminuted fracture pattern involving the surgical neck and lesser tubercle. So we haven&#39;t performed an MRI but that&#39;s planned for the recessment for any kind of soft tissue damage. Based off of our classification system this is the nearest classification type 2 fracture which means that it&#39;s a slight place but not extensively comminuted. So your diagnosis is the proximal humorous displacement fracture involving the surgical neck and lesser tubercle consisting of a nearest classification type 2 injury. For in terms of treatment options we want to consider conservative management which would involve splinting slings versus kind of like an operative intervention which could be an open reduction and internal fixation are possibly a heme arthoroplasty. So due to the nature of the fracture of Mr. Doe our recommended treatment plan is to refer you for a surgical consultation with someone who could do a possible open reduction and internal fixation. Postoperally you will definitely require a physical therapy for rehab and to regain more range of motion. And for the expected recovery timeline they post the proper post-ordery care with compliance and physiotherapy recommendations we anticipate full recovery within approximately 4 to 6 months. Our follow up schedule will be a surgical consultation with the next two days followed by a regular check up every two weeks for a wind inspection and suture removal at the four weeks post-op. PT sessions will be scheduled three times per week following surgery. Do you have any questions for me? Like what kind of cause the same fracture? Yeah so um, personal human fractures such as yours are often the result of high energy and high energy traumas such as fall from great height but they can also occur due to low injury injuries such as your slip while gartering especially if bone health is compromised for example by conditions like osteoporosis. Okay and will I need surgery like what and if I do like what would it involve? So given the nature of your fracture and displacement a referral to an orthopedic surgeon for further evaluation and possible ORIF has been recommended. The surgical procedure involves reallining the broken bone fragments and securing them with plates and sprues typically perform under general or regional anesthesia. Okay okay and how long will it take for me to re-influse them out on? So with proper post-op testing it will convince this physical therapy and adherence to your treatment plan. So I&#39;m going to have a gradual improvement in function over several kind of months and patients achieve their near normal range of motion and strength around four to six months. Okay great great and will I be able to resume gardening after my recovery? I just love I&#39;d like I can&#39;t leave my plants alone. Yeah so um once your fracture is healed and you have completed your PT, ARRI have as prescribed by the orthopedic team you should be able to return to activities like gardening have her and date some time for your full strength and endurance to be restored. Okay so what like complications can arise from the fracture or its treatment? Yeah absolutely it&#39;s a potential risk associated with proximal humerus fracture and its treatment include non-union of the bone fragments where the bone doesn&#39;t heal nerve injury during surgery especially the axillary nerve palsy and then the infraction of this type of the operation. You know just your usual nonetheless these complications are relatively rare and can be managed effectively when they do occur. Do you have any questions before we finish? No I think you covered everything. They&#39;re you doctor? Yeah absolutely I&#39;m you&#39;re welcome we&#39;re all gonna arrange for a surgical consultation right away. Perfect thank you.",
-    "winner": "gemma3_27b",
-    "loser": "gemma3_4b",
-    "winner_old_rating": 1200.736306793522,
-    "loser_old_rating": 1200,
-    "winner_new_rating": 1216.7023986633528,
-    "loser_new_rating": 1184.0339081301693
-  },
-  {
-    "timestamp": "2025-05-22T21:18:00.521Z",
-    "prompt_id": "The Weston Center For Cosmetic Surgery 27",
-    "winner": "gemma3_27b",
-    "loser": "qwen3_32b",
-    "winner_old_rating": 1216.7023986633528,
-    "loser_old_rating": 1200,
-    "winner_new_rating": 1231.9338167652902,
-    "loser_new_rating": 1184.7685818980626
+    "winner_new_rating": 1216,
+    "loser_new_rating": 1184,
+    "length_s": 292,
+    "type": "followup"
   }
 ]

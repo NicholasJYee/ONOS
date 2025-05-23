@@ -28,7 +28,7 @@
             </div>
             
             <div class="stats-detailed">
-                <h2>Model Performance</h2>
+                <h2>Model Performance - General</h2>
                 <table>
                     <thead>
                         <tr>
@@ -40,13 +40,65 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for model in sorted_models %}
+                        {% for model in sorted_general %}
                         <tr>
                             <td>{{ loop.index }}</td>
                             <td>{{ model }}</td>
-                            <td>{{ ratings[model]|round|int }}</td>
-                            <td>{{ "%.1f"|format(win_rates[model]) }}%</td>
-                            <td>{{ match_counts[model] }}</td>
+                            <td>{{ general_ratings[model]|round|int }}</td>
+                            <td>{{ "%.1f"|format(win_rates[model]['general']) }}%</td>
+                            <td>{{ match_counts[model]['general'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats-detailed">
+                <h2>Model Performance - Consult</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Model</th>
+                            <th>ELO Rating</th>
+                            <th>Win Rate</th>
+                            <th>Matches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in sorted_consult %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ model }}</td>
+                            <td>{{ consult_ratings[model]|round|int }}</td>
+                            <td>{{ "%.1f"|format(win_rates[model]['consult']) }}%</td>
+                            <td>{{ match_counts[model]['consult'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats-detailed">
+                <h2>Model Performance - Follow-up</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Model</th>
+                            <th>ELO Rating</th>
+                            <th>Win Rate</th>
+                            <th>Matches</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in sorted_followup %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ model }}</td>
+                            <td>{{ followup_ratings[model]|round|int }}</td>
+                            <td>{{ "%.1f"|format(win_rates[model]['followup']) }}%</td>
+                            <td>{{ match_counts[model]['followup'] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

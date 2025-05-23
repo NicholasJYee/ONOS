@@ -1,0 +1,11 @@
+{
+  "deepseek-r1_7b": 1200,
+  "deepseek-r1_32b": 1200,
+  "llama3.2_3b": 1184.0,
+  "llama3.1_8b": 1216.0,
+  "gemma3_4b": 1200,
+  "gemma3_27b": 1184.0,
+  "qwen2.5_3b": 1200,
+  "qwen3_32b": 1200,
+  "mistral-small3.1_24b": 1216.0
+}
