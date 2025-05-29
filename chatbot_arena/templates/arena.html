@@ -57,6 +57,24 @@
         .response-content {
             padding: 15px !important;
         }
+        .reviewer-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .reviewer-info label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .reviewer-info input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: calc(100% - 20px);
+            max-width: 300px;
+        }
     </style>
 </head>
 <body>
@@ -70,6 +88,10 @@
         </header>
         
         <main>
+            <div class="reviewer-info">
+                <label for="reviewer-name">Enter your name:</label>
+                <input type="text" id="reviewer-name" placeholder="Your Name" required>
+            </div>
             <div class="prompt-container">
                 <h2>Prompt:</h2>
                 <div class="prompt-text">{{ prompt }}</div>
@@ -147,8 +169,21 @@
             });
         });
         
+        // Remember reviewer name
+        const reviewerNameInput = document.getElementById('reviewer-name');
+        const savedReviewerName = localStorage.getItem('reviewerName');
+        if (savedReviewerName) {
+            reviewerNameInput.value = savedReviewerName;
+        }
+        
         // Handle vote
         function vote(choice) {
+            const reviewerName = reviewerNameInput.value.trim();
+            if (!reviewerName) {
+                alert('Please enter your name before voting.');
+                return;
+            }
+            localStorage.setItem('reviewerName', reviewerName);  // Save name
             let winner, loser;
             
             if (choice === 'a') {
@@ -168,7 +203,8 @@
                     winner: winner,
                     loser: loser,
                     prompt_id: promptId,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    reviewer: reviewerName
                 }),
             })
             .then(response => response.json())

@@ -100,8 +100,8 @@ def calculate_medcon(source_text, target_text):
 
 def main():
     # Define directories
-    notes_dir = Path("notes/data/mock_interviews/mock_interviews")
-    interviews_dir = Path("interviews/data/mock_interviews/mock_interviews")
+    notes_dir = Path("notes/data/data/mock_interviews")
+    interviews_dir = Path("interviews/data/mock_interviews")
     interview_files = list(interviews_dir.glob("*.txt"))
     
     print(f"Found {len(interview_files)} interview files")

@@ -25,7 +25,7 @@ K = 32  # K-factor, determines how much ratings change after each match
 DEFAULT_RATING = 1200  # Starting ELO rating for each model
 
 # Store ratings and match history
-RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'ratings.json')
+RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'general_ratings.json')
 CONSULT_RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'consult_ratings.json')
 FOLLOWUP_RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'followup_ratings.json')
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), 'history.json')
@@ -198,6 +198,7 @@ def vote():
     winner = data.get('winner')
     loser = data.get('loser')
     prompt_id = data.get('prompt_id')
+    reviewer = data.get('reviewer')
     
     # Load Excel data
     excel_data = load_excel_data()
@@ -231,7 +232,8 @@ def vote():
         'winner_new_rating': int(new_ratings[winner]),
         'loser_new_rating': int(new_ratings[loser]),
         'length_s': length_s,
-        'type': prompt_type
+        'type': prompt_type,
+        'reviewer': reviewer
     })
     save_history(history)
     
