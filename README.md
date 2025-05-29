@@ -10,8 +10,6 @@ This project provides an ambient scribe designed to improve orthopedic trauma cl
 
 - **Medical Scribe**: Audio transcription and automated clinical note generation
 - **Chatbot Arena**: LLM comparison platform for evaluating medical AI responses
-- **Standardized Patients**: AI-generated patient profiles for mock interviews
-- **Evaluation Framework**: Comprehensive metrics for assessing clinical note quality
 
 ## Components
 
