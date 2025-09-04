@@ -18,7 +18,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #A51C30 0%, #8B0000 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
       color: #333;
     }
     
@@ -74,7 +74,7 @@
     }
     
     .copy-btn {
-      background: #A51C30;
+      background: #3b82f6;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -89,7 +89,7 @@
     }
     
     .copy-btn:hover {
-      background: #8B0000;
+      background: #1d4ed8;
       transform: translateY(-1px);
     }
     
@@ -131,9 +131,9 @@
       width: 100px;
       height: 100px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #A51C30, #8B0000);
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
       border: none;
-      box-shadow: 0 8px 25px rgba(165, 28, 48, 0.4);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
       color: white;
       font-size: 2rem;
       display: flex;
@@ -147,7 +147,7 @@
     
     #recordBtn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 35px rgba(165, 28, 48, 0.5);
+      box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5);
     }
     
     #recordBtn:active {
@@ -155,7 +155,7 @@
     }
     
     #recordBtn.recording {
-      background: linear-gradient(135deg, #8B0000, #660000);
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
       animation: pulse 1.5s infinite;
     }
     
@@ -226,7 +226,7 @@
     
     .progress-bar {
       height: 20px;
-      background: linear-gradient(90deg, #A51C30, #8B0000);
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
       border-radius: 8px;
       width: 0%;
       transition: width 0.3s ease;
@@ -281,6 +281,37 @@
       border-top-color: white;
       animation: spin 1s ease-in-out infinite;
       margin-right: 10px;
+    }
+    
+    .developer-credit {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      text-align: right;
+    }
+    
+    .developer-credit a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.3s ease;
+    }
+    
+    .developer-credit a:hover {
+      color: rgba(255, 255, 255, 1);
+    }
+    
+    .institution-credit {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 2px;
+      font-style: italic;
     }
     
     @media (max-width: 768px) {
@@ -339,7 +370,7 @@
   <div class="container">
     <div class="header">
       <h1>ONOS</h1>
-      <p>An open-source, local-hosted ambient scribe for clinical documentation in orthopaedic trauma care</p>
+      <p>An open-source, local-hosted ambient scribe for clinical documentation in orthopaedic clinics</p>
       <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Click the microphone to start recording</p>
     </div>
     
@@ -361,6 +392,18 @@
         <div class="progress-bar" id="progressBar"></div>
         <div class="progress-text" id="progressText">Loading AI model...</div>
       </div>
+    </div>
+  </div>
+  
+  <div class="developer-credit">
+    <a href="https://github.com/NicholasJYee/ONOS" target="_blank" rel="noopener noreferrer">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px; vertical-align: middle;">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      Dr. Nicholas J. Yee, MD
+    </a>
+    <div class="institution-credit">
+      University of Toronto • Harvard University
     </div>
   </div>
 
@@ -970,19 +1013,6 @@
       }
     });
 
-    // Test function to verify output element works
-    function testOutput() {
-      console.log("Testing output element...");
-      output.textContent = "Test transcription text - this should appear in the box";
-      console.log("Test text set, output content:", output.textContent);
-    }
-    
-    // Add test button (temporary)
-    const testBtn = document.createElement('button');
-    testBtn.textContent = 'Test Output';
-    testBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 10px; background: #A51C30; color: white; border: none; border-radius: 5px; cursor: pointer;';
-    testBtn.onclick = testOutput;
-    document.body.appendChild(testBtn);
     
     // Initialize
     loadModel();
