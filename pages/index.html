@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ONOS - Orthopaedic Clinical Scribe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #A51C30 0%, #8B0000 100%);
+      color: #333;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    .header {
+      text-align: center;
+      color: white;
+    }
+    
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+      margin: 0;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .output-container {
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .output-title {
+      font-weight: 600;
+      color: #495057;
+      margin: 0;
+    }
+    
+    .copy-btn {
+      background: #A51C30;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .copy-btn:hover {
+      background: #8B0000;
+      transform: translateY(-1px);
+    }
+    
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+    
+    .copy-btn.copied {
+      background: #228B22;
+    }
+    
+    #output {
+      padding: 20px;
+      min-height: 200px;
+      font-size: 1rem;
+      line-height: 1.6;
+      border: none;
+      outline: none;
+      resize: vertical;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+    }
+    
+    #output:empty:before {
+      content: "Transcribed text will appear here...";
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    .record-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    #recordBtn {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #A51C30, #8B0000);
+      border: none;
+      box-shadow: 0 8px 25px rgba(165, 28, 48, 0.4);
+      color: white;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #recordBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(165, 28, 48, 0.5);
+    }
+    
+    #recordBtn:active {
+      transform: translateY(0);
+    }
+    
+    #recordBtn.recording {
+      background: linear-gradient(135deg, #8B0000, #660000);
+      animation: pulse 1.5s infinite;
+    }
+    
+    #recordBtn.processing {
+      background: linear-gradient(135deg, #DAA520, #B8860B);
+      animation: spin 1s linear infinite;
+    }
+    
+    #recordBtn.loading {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    
+    #recordBtn.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .status-text {
+      color: white;
+      font-weight: 500;
+      text-align: center;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .error {
+      color: #A51C30;
+      background: rgba(165, 28, 48, 0.1);
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(165, 28, 48, 0.2);
+      margin-top: 10px;
+    }
+    
+    .progress-container {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 3px;
+      margin: 10px 0;
+      display: none;
+    }
+    
+    .progress-bar {
+      height: 20px;
+      background: linear-gradient(90deg, #A51C30, #8B0000);
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-image: linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size: 50px 50px;
+      animation: move 2s linear infinite;
+    }
+    
+    @keyframes move {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 50px 50px;
+      }
+    }
+    
+    .progress-text {
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      margin-top: 5px;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .header p {
+        font-size: 1rem;
+      }
+      
+      #recordBtn {
+        width: 80px;
+        height: 80px;
+        font-size: 1.5rem;
+      }
+      
+      .output-header {
+        padding: 12px 15px;
+      }
+      
+      .copy-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+      
+      #output {
+        padding: 15px;
+        min-height: 150px;
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        gap: 20px;
+      }
+      
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      
+      #recordBtn {
+        width: 70px;
+        height: 70px;
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>ONOS</h1>
+      <p>An open-source, local-hosted ambient scribe for clinical documentation in orthopaedic trauma care</p>
+      <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Click the microphone to start recording</p>
+    </div>
+    
+    <div class="output-container">
+      <div class="output-header">
+        <h3 class="output-title">Transcription</h3>
+        <button class="copy-btn" id="copyBtn">
+          <span>📋</span>
+          <span id="copyText">Copy</span>
+        </button>
+      </div>
+      <div id="output" contenteditable="true"></div>
+    </div>
+    
+    <div class="record-section">
+      <button id="recordBtn">🎤</button>
+      <div class="status-text" id="statusText">Ready to record</div>
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+        <div class="progress-text" id="progressText">Loading AI model...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Transformers.js implementation (works on GitHub Pages)
+    let whisper = null;
+    let whisperLoaded = false;
+    
+    async function loadWhisperTransformers() {
+      try {
+        console.log("Loading Whisper with Transformers.js...");
+        
+        // Import Transformers.js
+        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest/dist/transformers.min.js');
+        
+        console.log("Initializing Whisper pipeline...");
+        whisper = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+          quantized: true,
+          progress_callback: (progress) => {
+            console.log("Model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
+          }
+        });
+        
+        console.log("Whisper Transformers.js loaded successfully");
+        whisperLoaded = true;
+        return true;
+        
+      } catch (error) {
+        console.error("Failed to load Whisper Transformers.js:", error);
+        return false;
+      }
+    }
+    
+    async function loadWhisperFallback() {
+      console.log("Transformers.js not available, using Web Speech API fallback...");
+      
+      // Check if Web Speech API is available
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        console.log("Using Web Speech API for transcription");
+        
+        // Create a mock Whisper object that uses Web Speech API
+        window.Whisper = {
+          loadModel: async (modelName) => {
+            console.log("Web Speech API model loaded");
+            return {
+              transcribe: async (audioData) => {
+                const audioSize = audioData ? audioData.byteLength || audioData.length || 0 : 0;
+                console.log("Web Speech API transcribe called with audio data:", audioSize, "bytes");
+                
+                return new Promise((resolve, reject) => {
+                  // For Web Speech API, we need to play the audio and capture speech
+                  const audioBlob = new Blob([audioData], { type: 'audio/webm' });
+                  const audioUrl = URL.createObjectURL(audioBlob);
+                  const audio = new Audio(audioUrl);
+                  
+                  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                  recognition.continuous = true;
+                  recognition.interimResults = false;
+                  recognition.lang = 'en-US';
+                  
+                  let finalTranscript = '';
+                  
+                  recognition.onresult = (event) => {
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                      if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                      }
+                    }
+                  };
+                  
+                  recognition.onend = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    if (finalTranscript) {
+                      resolve({ text: finalTranscript });
+                    } else {
+                      resolve({ text: `Audio recorded successfully (${audioSize} bytes). Web Speech API could not transcribe the audio.` });
+                    }
+                  };
+                  
+                  recognition.onerror = (event) => {
+                    URL.revokeObjectURL(audioUrl);
+                    console.error("Speech recognition error:", event.error);
+                    resolve({ text: `Audio recorded successfully (${audioSize} bytes). Speech recognition error: ${event.error}` });
+                  };
+                  
+                  // Start recognition and play audio
+                  recognition.start();
+                  audio.play();
+                  
+                  // Stop after audio ends
+                  audio.onended = () => {
+                    setTimeout(() => recognition.stop(), 1000);
+                  };
+                });
+              }
+            };
+          }
+        };
+      } else {
+        console.log("Web Speech API not available, using basic fallback");
+        
+        // Create a basic fallback
+        window.Whisper = {
+          loadModel: async (modelName) => {
+            console.log("Basic fallback model loaded");
+            return {
+              transcribe: async (audioData) => {
+                const audioSize = audioData ? audioData.byteLength || audioData.length || 0 : 0;
+                console.log("Basic fallback transcribe called with audio data:", audioSize, "bytes");
+                
+                return new Promise((resolve, reject) => {
+                  setTimeout(() => {
+                    const placeholderText = `Audio recorded successfully (${audioSize} bytes). For full transcription, please check your internet connection and refresh the page.`;
+                    console.log("Returning fallback text:", placeholderText);
+                    resolve({ text: placeholderText });
+                  }, 1000);
+                });
+              }
+            };
+          }
+        };
+      }
+      
+      whisperLoaded = true;
+      return true;
+    }
+    
+    // Make functions available globally
+    window.loadWhisperTransformers = loadWhisperTransformers;
+    window.loadWhisperFallback = loadWhisperFallback;
+  </script>
+  <script>
+    const recordBtn = document.getElementById("recordBtn");
+    const output = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+    const copyText = document.getElementById("copyText");
+    const statusText = document.getElementById("statusText");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    
+    let mediaRecorder, audioChunks = [], isRecording = false;
+    let whisperModel;
+    let modelLoading = false;
+
+    function updateStatus(message, isError = false) {
+      statusText.textContent = message;
+      if (isError) {
+        statusText.style.color = '#ff6b6b';
+      } else {
+        statusText.style.color = 'white';
+      }
+    }
+
+    function showError(message) {
+      updateStatus(message, true);
+      setTimeout(() => {
+        updateStatus("Ready to record");
+      }, 3000);
+    }
+
+    function showProgress(show = true) {
+      progressContainer.style.display = show ? 'block' : 'none';
+    }
+
+    function updateProgress(percent, text) {
+      progressBar.style.width = percent + '%';
+      progressText.textContent = text;
+    }
+
+    function simulateProgress() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        
+        updateProgress(progress, `Downloading AI model... ${Math.round(progress)}%`);
+        
+        if (whisperModel || progress >= 90) {
+          clearInterval(interval);
+          if (whisperModel) {
+            updateProgress(100, "Model loaded successfully!");
+            setTimeout(() => {
+              showProgress(false);
+              updateStatus("Ready to record");
+            }, 500);
+          }
+        }
+      }, 200);
+      
+      return interval;
+    }
+
+    async function loadModel(retryCount = 0) {
+      try {
+        if (modelLoading) return;
+        modelLoading = true;
+        
+        showProgress(true);
+        updateProgress(10, "Initializing...");
+        recordBtn.classList.add("loading");
+        
+        // Try to load Whisper with Transformers.js first
+        updateProgress(20, "Loading Whisper with Transformers.js...");
+        console.log("Loading Whisper with Transformers.js...");
+        
+        let transformersLoaded = false;
+        try {
+          transformersLoaded = await loadWhisperTransformers();
+        } catch (error) {
+          console.warn("Transformers.js loading failed, trying fallback:", error);
+        }
+        
+        if (!transformersLoaded) {
+          console.log("Transformers.js not available, using fallback...");
+          updateProgress(30, "Using fallback transcription...");
+          await loadWhisperFallback();
+        }
+        
+        console.log("Whisper library loaded, initializing model...");
+        updateProgress(50, "Initializing model...");
+        
+        // Start progress simulation
+        const progressInterval = simulateProgress();
+        
+        try {
+          if (transformersLoaded && whisper) {
+            console.log("Using Whisper Transformers.js for transcription");
+            // For Transformers.js, we'll use the whisper pipeline directly
+            whisperModel = {
+              transcribe: async (audioData) => {
+                console.log("Transcribing with Transformers.js...");
+                try {
+                  // Convert ArrayBuffer to audio file for Transformers.js
+                  const audioBlob = new Blob([audioData], { type: 'audio/webm' });
+                  const audioUrl = URL.createObjectURL(audioBlob);
+                  
+                  const result = await whisper(audioUrl);
+                  console.log("Transcription result:", result);
+                  
+                  // Clean up
+                  URL.revokeObjectURL(audioUrl);
+                  
+                  return { text: result.text || result };
+                } catch (error) {
+                  console.error("Transcription error:", error);
+                  throw error;
+                }
+              }
+            };
+          } else {
+            console.log("Using fallback transcription");
+            whisperModel = await window.Whisper.loadModel("tiny");
+          }
+        } catch (modelError) {
+          clearInterval(progressInterval);
+          throw new Error(`Failed to load AI model: ${modelError.message}`);
+        }
+        
+        // Clear the simulation interval
+        clearInterval(progressInterval);
+        
+        // Validate that the model is properly loaded
+        if (!whisperModel) {
+          throw new Error("Model failed to load");
+        }
+        
+        console.log("Whisper model loaded successfully");
+        console.log("Model object:", whisperModel);
+        updateProgress(100, "Model loaded successfully!");
+        
+        setTimeout(() => {
+          showProgress(false);
+          updateStatus("Ready to record");
+          modelLoading = false;
+          recordBtn.classList.remove("loading");
+          console.log("Model loading complete, ready to record");
+        }, 500);
+        
+      } catch (error) {
+        console.error("Error loading model:", error);
+        showProgress(false);
+        modelLoading = false;
+        recordBtn.classList.remove("loading");
+        
+        if (retryCount < 2) {
+          console.log(`Model loading failed, retrying... (attempt ${retryCount + 1})`);
+          updateStatus("Retrying model load...");
+          setTimeout(() => loadModel(retryCount + 1), 3000);
+        } else {
+          showError(`Failed to load AI model: ${error.message}. Please refresh the page.`);
+        }
+      }
+    }
+
+    async function startRecording() {
+      console.log("startRecording function called");
+      try {
+        console.log("Requesting microphone access...");
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 16000
+          } 
+        });
+        console.log("Microphone access granted, stream:", stream);
+        
+        // Check for supported MIME types
+        let mimeType = 'audio/webm;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = '';
+            }
+          }
+        }
+        
+        const options = mimeType ? { mimeType } : {};
+        mediaRecorder = new MediaRecorder(stream, options);
+        
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = e => {
+          console.log("Audio data available:", e.data.size, "bytes");
+          if (e.data.size > 0) {
+            audioChunks.push(e.data);
+            console.log("Total audio chunks:", audioChunks.length);
+          }
+        };
+        
+        mediaRecorder.onstop = async () => {
+          console.log("MediaRecorder onstop event triggered");
+          try {
+            recordBtn.classList.remove("recording");
+            recordBtn.classList.add("processing");
+            updateStatus("Processing audio...");
+            console.log("Starting audio processing...");
+            
+            // Check if we have audio data
+            if (audioChunks.length === 0) {
+              throw new Error("No audio data recorded");
+            }
+            
+            // Create audio blob with the correct MIME type
+            const mimeType = audioChunks[0].type || 'audio/webm';
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            
+            // Check minimum recording duration (at least 0.5 seconds)
+            const totalSize = audioChunks.reduce((sum, chunk) => sum + chunk.size, 0);
+            if (totalSize < 1000) { // Very small file size
+              throw new Error("Recording too short. Please record for at least 1 second.");
+            }
+            
+            // Validate model before transcription
+            if (!whisperModel) {
+              throw new Error("AI model not loaded. Please refresh the page.");
+            }
+            
+            // Check if it's whisper-web-transcriber (different API)
+            if (whisperModel.constructor.name !== 'WhisperTranscriber' && typeof whisperModel.transcribe !== 'function') {
+              throw new Error("AI model is corrupted. Please refresh the page.");
+            }
+            
+            // Try transcription with the appropriate method
+            let transcription;
+            try {
+              const arrayBuffer = await audioBlob.arrayBuffer();
+              console.log("Audio blob size:", arrayBuffer.byteLength, "bytes");
+              console.log("Audio MIME type:", audioBlob.type);
+              
+              if (arrayBuffer.byteLength === 0) {
+                throw new Error("Empty audio data recorded");
+              }
+              
+              console.log("Attempting transcription...");
+              console.log("Whisper model:", whisperModel);
+              
+              // Use the transcribe method (works for both WASM and fallback)
+              transcription = await whisperModel.transcribe(arrayBuffer);
+              console.log("Transcription result:", transcription);
+              console.log("Transcription text:", transcription.text);
+              
+              console.log("Transcription successful");
+            } catch (originalError) {
+              console.warn("Transcription failed, trying WAV conversion:", originalError);
+              
+              // Try WAV conversion as fallback
+              try {
+                const wavBlob = await convertToWav(audioBlob);
+                const arrayBuffer = await wavBlob.arrayBuffer();
+                console.log("WAV blob size:", arrayBuffer.byteLength, "bytes");
+                
+                if (arrayBuffer.byteLength === 0) {
+                  throw new Error("Empty WAV data after conversion");
+                }
+                
+                console.log("Attempting transcription with WAV format...");
+                transcription = await whisperModel.transcribe(arrayBuffer);
+                console.log("WAV Transcription result:", transcription);
+                console.log("WAV Transcription text:", transcription.text);
+                console.log("Transcription successful with WAV format");
+              } catch (wavError) {
+                console.error("Both original and WAV formats failed:", wavError);
+                throw new Error(`Audio processing failed: ${originalError.message}`);
+              }
+            }
+            
+            console.log("Setting output text to:", transcription.text);
+            console.log("Output element before setting text:", output.textContent);
+            console.log("Output element innerHTML before:", output.innerHTML);
+            
+            // Try multiple ways to set the text
+            output.textContent = transcription.text;
+            output.innerHTML = transcription.text;
+            
+            console.log("Output element after setting text:", output.textContent);
+            console.log("Output element innerHTML after:", output.innerHTML);
+            console.log("Output element visible:", output.offsetHeight > 0);
+            recordBtn.classList.remove("processing");
+            updateStatus("Transcription complete");
+            
+            // Auto-scroll to bottom
+            output.scrollTop = output.scrollHeight;
+            
+          } catch (error) {
+            console.error("Error processing audio:", error);
+            recordBtn.classList.remove("processing");
+            showError(`Failed to process audio: ${error.message}. Please try again.`);
+          }
+        };
+        
+        console.log("Starting media recorder...");
+        mediaRecorder.start();
+        recordBtn.classList.add("recording");
+        updateStatus("Recording... Click to stop");
+        isRecording = true;
+        console.log("Recording started, isRecording:", isRecording);
+        
+        // Add a minimum recording time
+        setTimeout(() => {
+          if (isRecording) {
+            console.log("Minimum recording time reached, you can stop now");
+            updateStatus("Recording... Click to stop (minimum time reached)");
+          }
+        }, 2000);
+        
+      } catch (error) {
+        console.error("Error accessing microphone:", error);
+        if (error.name === 'NotAllowedError') {
+          showError("Microphone access denied. Please allow microphone access and try again.");
+        } else {
+          showError("Failed to access microphone. Please check your device settings.");
+        }
+      }
+    }
+
+    // Convert audio blob to WAV format for better Whisper.js compatibility
+    async function convertToWav(audioBlob) {
+      return new Promise((resolve, reject) => {
+        // Check if we can use AudioContext
+        if (!window.AudioContext && !window.webkitAudioContext) {
+          console.warn("AudioContext not available, using original format");
+          resolve(audioBlob);
+          return;
+        }
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const fileReader = new FileReader();
+        
+        fileReader.onload = async (e) => {
+          try {
+            const arrayBuffer = e.target.result;
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            // Convert to WAV
+            const wavBuffer = audioBufferToWav(audioBuffer);
+            const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+            resolve(wavBlob);
+          } catch (error) {
+            console.warn("Failed to convert to WAV, using original format:", error);
+            resolve(audioBlob);
+          }
+        };
+        
+        fileReader.onerror = () => {
+          console.warn("Failed to read audio file, using original format");
+          resolve(audioBlob);
+        };
+        
+        fileReader.readAsArrayBuffer(audioBlob);
+      });
+    }
+
+    // Convert AudioBuffer to WAV format
+    function audioBufferToWav(buffer) {
+      const length = buffer.length;
+      const sampleRate = buffer.sampleRate;
+      const numberOfChannels = buffer.numberOfChannels;
+      const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+      const view = new DataView(arrayBuffer);
+      
+      // WAV header
+      const writeString = (offset, string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
+      
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numberOfChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+      view.setUint16(32, numberOfChannels * 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, length * numberOfChannels * 2, true);
+      
+      // Convert audio data
+      let offset = 44;
+      for (let i = 0; i < length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      }
+      
+      return arrayBuffer;
+    }
+
+    function stopRecording() {
+      console.log("Stopping recording...");
+      console.log("MediaRecorder state:", mediaRecorder ? mediaRecorder.state : "null");
+      console.log("Audio chunks collected:", audioChunks.length);
+      
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        isRecording = false;
+        console.log("Recording stopped, isRecording:", isRecording);
+      } else {
+        console.warn("MediaRecorder not in recording state");
+      }
+    }
+
+    recordBtn.onclick = async () => {
+      console.log("Record button clicked, isRecording:", isRecording);
+      console.log("Whisper model available:", !!whisperModel);
+      console.log("Model loading:", modelLoading);
+      
+      if (!isRecording) {
+        // Check if model is loaded before starting recording
+        if (!whisperModel) {
+          if (modelLoading) {
+            console.log("Model still loading, showing error");
+            showError("AI model is still loading. Please wait for the progress bar to complete.");
+          } else {
+            console.log("Model failed to load, showing error");
+            showError("AI model failed to load. Please refresh the page.");
+          }
+          return;
+        }
+        console.log("Starting recording...");
+        await startRecording();
+      } else {
+        console.log("Stopping recording...");
+        stopRecording();
+      }
+    };
+
+    copyBtn.onclick = async () => {
+      try {
+        const text = output.textContent;
+        if (!text || text.trim() === '') {
+          showError("No text to copy");
+          return;
+        }
+        
+        await navigator.clipboard.writeText(text);
+        copyBtn.classList.add("copied");
+        copyText.textContent = "Copied!";
+        
+        setTimeout(() => {
+          copyBtn.classList.remove("copied");
+          copyText.textContent = "Copy";
+        }, 2000);
+        
+      } catch (error) {
+        console.error("Error copying text:", error);
+        showError("Failed to copy text");
+      }
+    };
+
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target !== output) {
+        e.preventDefault();
+        recordBtn.click();
+      }
+    });
+
+    // Test function to verify output element works
+    function testOutput() {
+      console.log("Testing output element...");
+      output.textContent = "Test transcription text - this should appear in the box";
+      console.log("Test text set, output content:", output.textContent);
+    }
+    
+    // Add test button (temporary)
+    const testBtn = document.createElement('button');
+    testBtn.textContent = 'Test Output';
+    testBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 10px; background: #A51C30; color: white; border: none; border-radius: 5px; cursor: pointer;';
+    testBtn.onclick = testOutput;
+    document.body.appendChild(testBtn);
+    
+    // Initialize
+    loadModel();
+  </script>
+</body>
+</html>
