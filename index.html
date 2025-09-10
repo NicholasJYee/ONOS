@@ -493,7 +493,11 @@
         console.log("Loading Whisper with Xenova Transformers.js...");
         
         // Import Xenova Transformers.js (better for Whisper)
-        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
+        const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
+        
+        // Force CDN usage
+        env.remoteURL = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest';
+        env.allowRemoteModels = true;
         
         console.log("Initializing Whisper pipeline...");
         whisper = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
@@ -513,99 +517,6 @@
       }
     }
     
-    async function loadWhisperFallback() {
-      console.log("Transformers.js not available, using Web Speech API fallback...");
-      
-      // Check if Web Speech API is available
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        console.log("Using Web Speech API for transcription");
-        
-        // Create a mock Whisper object that uses Web Speech API
-        window.Whisper = {
-          loadModel: async (modelName) => {
-            console.log("Web Speech API model loaded");
-            return {
-              transcribe: async (audioData) => {
-                const audioSize = audioData ? audioData.byteLength || audioData.length || 0 : 0;
-                console.log("Web Speech API transcribe called with audio data:", audioSize, "bytes");
-                
-                return new Promise((resolve, reject) => {
-                  // For Web Speech API, we need to play the audio and capture speech
-                  const audioBlob = new Blob([audioData], { type: 'audio/webm' });
-                  const audioUrl = URL.createObjectURL(audioBlob);
-                  const audio = new Audio(audioUrl);
-                  
-                  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                  recognition.continuous = true;
-                  recognition.interimResults = false;
-                  recognition.lang = 'en-US';
-                  
-                  let finalTranscript = '';
-                  
-                  recognition.onresult = (event) => {
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                      if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                      }
-                    }
-                  };
-                  
-                  recognition.onend = () => {
-                    URL.revokeObjectURL(audioUrl);
-                    if (finalTranscript) {
-                      resolve({ text: finalTranscript });
-                    } else {
-                      resolve({ text: `Audio recorded successfully (${audioSize} bytes). Web Speech API could not transcribe the audio.` });
-                    }
-                  };
-                  
-                  recognition.onerror = (event) => {
-                    URL.revokeObjectURL(audioUrl);
-                    console.error("Speech recognition error:", event.error);
-                    resolve({ text: `Audio recorded successfully (${audioSize} bytes). Speech recognition error: ${event.error}` });
-                  };
-                  
-                  // Start recognition and play audio
-                  recognition.start();
-                  audio.play();
-                  
-                  // Stop after audio ends
-                  audio.onended = () => {
-                    setTimeout(() => recognition.stop(), 1000);
-                  };
-                });
-              }
-            };
-          }
-        };
-      } else {
-        console.log("Web Speech API not available, using basic fallback");
-        
-        // Create a basic fallback
-        window.Whisper = {
-          loadModel: async (modelName) => {
-            console.log("Basic fallback model loaded");
-            return {
-              transcribe: async (audioData) => {
-                const audioSize = audioData ? audioData.byteLength || audioData.length || 0 : 0;
-                console.log("Basic fallback transcribe called with audio data:", audioSize, "bytes");
-                
-                return new Promise((resolve, reject) => {
-                  setTimeout(() => {
-                    const placeholderText = `Audio recorded successfully (${audioSize} bytes). For full transcription, please check your internet connection and refresh the page.`;
-                    console.log("Returning fallback text:", placeholderText);
-                    resolve({ text: placeholderText });
-                  }, 1000);
-                });
-              }
-            };
-          }
-        };
-      }
-      
-      whisperLoaded = true;
-      return true;
-    }
     
     // Load text generation model
     async function loadLlamaModel() {
@@ -613,17 +524,24 @@
         console.log("Loading text generation model...");
         
         // Import Xenova Transformers.js
-        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
+        const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
+        
+        // Force CDN usage
+        env.remoteURL = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest';
+        env.allowRemoteModels = true;
         
         console.log("Initializing text generation pipeline...");
         
-        // Load Qwen1.5-1.8B-Chat from CDN
-        llamaModel = await pipeline('text-generation', 'Xenova/Qwen1.5-1.8B-Chat', {
+        // Load Qwen1.5-0.5B-Chat model (smaller, browser-friendly)
+        console.log("Attempting to load Qwen1.5-0.5B-Chat model (browser-friendly)...");
+        llamaModel = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat', {
+          quantized: true,
           progress_callback: (progress) => {
-            console.log("Text generation model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
+            console.log("Qwen1.5-0.5B-Chat model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
           }
         });
-        console.log("Qwen1.5-1.8B-Chat loaded successfully from CDN");
+        console.log("Qwen1.5-0.5B-Chat loaded successfully from CDN");
+        console.log("Loaded model:", llamaModel);
         
         llamaLoaded = true;
         return true;
@@ -636,7 +554,6 @@
 
     // Make functions available globally
     window.loadWhisperTransformers = loadWhisperTransformers;
-    window.loadWhisperFallback = loadWhisperFallback;
     window.loadLlamaModel = loadLlamaModel;
   </script>
   <script>
@@ -712,32 +629,24 @@
         updateProgress(10, "Initializing...");
         recordBtn.classList.add("loading");
         
-        // Try to load Whisper with Transformers.js first
+        // Load Whisper with Transformers.js
         updateProgress(20, "Loading Whisper with Transformers.js...");
         console.log("Loading Whisper with Transformers.js...");
         
-        let transformersLoaded = false;
-        try {
-          transformersLoaded = await loadWhisperTransformers();
-        } catch (error) {
-          console.warn("Transformers.js loading failed, trying fallback:", error);
-        }
-        
+        const transformersLoaded = await loadWhisperTransformers();
         if (!transformersLoaded) {
-          console.log("Transformers.js not available, using fallback...");
-          updateProgress(30, "Using fallback transcription...");
-          await loadWhisperFallback();
+          throw new Error("Failed to load Whisper Transformers.js");
         }
         
-        // Load Qwen model for medical note generation
-        updateProgress(40, "Loading Qwen1.5-1.8B-Chat for text generation...");
-        console.log("Loading Qwen1.5-1.8B-Chat model...");
+        // Load text generation model for medical note generation
+        updateProgress(40, "Loading text generation model...");
+        console.log("Loading text generation model...");
         
         try {
           await loadLlamaModel();
-          console.log("Qwen1.5-1.8B-Chat model loaded successfully");
+          console.log("Text generation model loaded successfully");
         } catch (error) {
-          console.warn("Qwen1.5-1.8B-Chat model loading failed:", error);
+          console.warn("Text generation model loading failed:", error);
         }
         
         console.log("Whisper library loaded, initializing model...");
@@ -746,44 +655,34 @@
         // Start progress simulation
         const progressInterval = simulateProgress();
         
-        try {
-          if (transformersLoaded && whisper) {
-            console.log("Using Whisper Transformers.js for transcription");
-            // For Transformers.js, we'll use the whisper pipeline directly
-            whisperModel = {
-              transcribe: async (audioData) => {
-                console.log("Transcribing with Transformers.js...");
-                try {
-                  // Convert ArrayBuffer to audio file for Transformers.js
-                  const audioBlob = new Blob([audioData], { type: 'audio/webm' });
-                  const audioUrl = URL.createObjectURL(audioBlob);
-                  
-                  const result = await whisper(audioUrl, {
-                    chunk_length_s: 30,
-                    stride_length_s: 5,
-                    return_timestamps: false,
-                    language: 'en'
-                  });
-                  console.log("Transcription result:", result);
-                  
-                  // Clean up
-                  URL.revokeObjectURL(audioUrl);
-                  
-                  return { text: result.text || result };
-                } catch (error) {
-                  console.error("Transcription error:", error);
-                  throw error;
-                }
-              }
-            };
-          } else {
-            console.log("Using fallback transcription");
-            whisperModel = await window.Whisper.loadModel("tiny");
+        // Use Whisper Transformers.js for transcription
+        console.log("Using Whisper Transformers.js for transcription");
+        whisperModel = {
+          transcribe: async (audioData) => {
+            console.log("Transcribing with Transformers.js...");
+            try {
+              // Convert ArrayBuffer to audio file for Transformers.js
+              const audioBlob = new Blob([audioData], { type: 'audio/webm' });
+              const audioUrl = URL.createObjectURL(audioBlob);
+              
+              const result = await whisper(audioUrl, {
+                chunk_length_s: 30,
+                stride_length_s: 5,
+                return_timestamps: false,
+                language: 'en'
+              });
+              console.log("Transcription result:", result);
+              
+              // Clean up
+              URL.revokeObjectURL(audioUrl);
+              
+              return { text: result.text || result };
+            } catch (error) {
+              console.error("Transcription error:", error);
+              throw error;
+            }
           }
-        } catch (modelError) {
-          clearInterval(progressInterval);
-          throw new Error(`Failed to load AI model: ${modelError.message}`);
-        }
+        };
         
         // Clear the simulation interval
         clearInterval(progressInterval);
@@ -1169,17 +1068,21 @@ If the note doesn't start with 'Patient information' or contains [Incomplete] se
         throw new Error("Text generation model not loaded");
       }
       
+      console.log("Generating medical note with Qwen1.5-0.5B-Chat model");
+      console.log("Model object:", llamaModel);
+      
       const prompt = `${SYSTEM_MESSAGE}\n\nConversation:\n${transcript}`;
+      console.log("Prompt being sent to model:", prompt.substring(0, 200) + "...");
       
       const result = await llamaModel(prompt, {
         max_new_tokens: 800,
         temperature: 0.1,
         do_sample: true,
         top_p: 0.9,
-        repetition_penalty: 1.1,
-        pad_token_id: 50256
+        repetition_penalty: 1.1
       });
       
+      console.log("Model result:", result);
       return result[0].generated_text;
     }
 
