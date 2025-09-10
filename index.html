@@ -34,7 +34,7 @@
     .main-content {
       width: 100%;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 20px;
       align-items: start;
     }
@@ -428,6 +428,17 @@
     </div>
     
     <div class="main-content">
+      <div class="medical-note-container">
+        <div class="output-header">
+          <h3 class="output-title">Clinical Note</h3>
+          <button class="copy-btn" id="copyBtn">
+            <span>📋</span>
+            <span id="copyText">Copy</span>
+          </button>
+        </div>
+        <div id="output" contenteditable="true"></div>
+      </div>
+      
       <div class="transcript-container">
         <div class="output-header">
           <h3 class="output-title">Transcription</h3>
@@ -437,28 +448,6 @@
           </button>
         </div>
         <div id="transcript"></div>
-      </div>
-      
-      <div class="medical-note-container">
-        <div class="output-header">
-          <h3 class="output-title">Medical Note</h3>
-          <button class="copy-btn" id="copyBtn">
-            <span>📋</span>
-            <span id="copyText">Copy</span>
-          </button>
-        </div>
-        <div id="output" contenteditable="true"></div>
-      </div>
-      
-      <div class="output-container">
-        <div class="output-header">
-          <h3 class="output-title">Processing</h3>
-          <button class="copy-btn" id="processBtn">
-            <span>🔄</span>
-            <span id="processText">Process</span>
-          </button>
-        </div>
-        <div id="processing" style="padding: 20px; min-height: 200px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; font-family: inherit; background: #f8f9fa; border: none; outline: none; resize: none;"></div>
       </div>
     </div>
     
@@ -692,13 +681,10 @@
     const recordBtn = document.getElementById("recordBtn");
     const output = document.getElementById("output");
     const transcript = document.getElementById("transcript");
-    const processing = document.getElementById("processing");
     const copyBtn = document.getElementById("copyBtn");
     const copyText = document.getElementById("copyText");
     const copyTranscriptBtn = document.getElementById("copyTranscriptBtn");
     const copyTranscriptText = document.getElementById("copyTranscriptText");
-    const processBtn = document.getElementById("processBtn");
-    const processText = document.getElementById("processText");
     const statusText = document.getElementById("statusText");
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
@@ -1004,10 +990,20 @@
             console.log("Transcript element after setting text:", transcript.textContent);
             console.log("Transcript element visible:", transcript.offsetHeight > 0);
             recordBtn.classList.remove("processing");
-            updateStatus("Transcription complete - Click Process to generate medical note");
+            updateStatus("Transcription complete - Generating clinical note...");
             
-            // Auto-scroll to bottom
-            output.scrollTop = output.scrollHeight;
+            // Auto-scroll to bottom of transcript
+            transcript.scrollTop = transcript.scrollHeight;
+            
+            // Automatically process the transcription to generate clinical note
+            setTimeout(async () => {
+              try {
+                await generateMedicalNoteFromTranscript(transcription.text);
+              } catch (error) {
+                console.error("Error generating medical note:", error);
+                updateStatus("Transcription complete - Error generating note");
+              }
+            }, 1000);
             
           } catch (error) {
             console.error("Error processing audio:", error);
@@ -1204,9 +1200,9 @@ Medical Note:`;
       return result[0].generated_text;
     }
 
-    // Process button click handler
-    processBtn.onclick = async () => {
-      if (!currentTranscript || currentTranscript.trim() === '') {
+    // Auto-generate medical note from transcript
+    async function generateMedicalNoteFromTranscript(transcript) {
+      if (!transcript || transcript.trim() === '') {
         showError("No transcript to process");
         return;
       }
@@ -1217,29 +1213,22 @@ Medical Note:`;
       }
       
       try {
-        processBtn.classList.add("loading");
-        processText.textContent = "Processing...";
-        processing.textContent = "Generating medical note...";
+        updateStatus("Generating clinical note...");
+        output.textContent = "Generating clinical note...";
         
-        const medicalNote = await generateMedicalNote(currentTranscript);
+        const medicalNote = await generateMedicalNote(transcript);
         
         // Extract the medical note from the response (remove the prompt)
         const noteStart = medicalNote.indexOf("Patient information");
         const cleanNote = noteStart > -1 ? medicalNote.substring(noteStart) : medicalNote;
         
         output.textContent = cleanNote;
-        processing.textContent = "Medical note generated successfully!";
-        
-        processBtn.classList.remove("loading");
-        processText.textContent = "Process";
-        updateStatus("Medical note generated");
+        updateStatus("Clinical note generated successfully!");
         
       } catch (error) {
         console.error("Error generating medical note:", error);
-        processBtn.classList.remove("loading");
-        processText.textContent = "Process";
-        processing.textContent = `Error: ${error.message}`;
-        showError(`Failed to generate medical note: ${error.message}`);
+        output.textContent = `Error generating clinical note: ${error.message}`;
+        showError(`Failed to generate clinical note: ${error.message}`);
       }
     };
 
