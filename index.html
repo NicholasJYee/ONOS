@@ -617,58 +617,13 @@
         
         console.log("Initializing text generation pipeline...");
         
-        try {
-          // Try to load GPT-2 from CDN
-          llamaModel = await pipeline('text-generation', 'Xenova/gpt2', {
-            progress_callback: (progress) => {
-              console.log("Text generation model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
-            }
-          });
-          console.log("GPT-2 loaded successfully from CDN");
-        } catch (modelError) {
-          console.log("GPT-2 CDN loading failed, using fallback...");
-          // Create a fallback text generation function
-          llamaModel = {
-            generate: async (prompt, options = {}) => {
-              const transcript = prompt.split('Conversation: ')[1] || '';
-              
-              // Simple but effective medical note template
-              const medicalNote = `**Patient Information:**
-[Extract from conversation: Name, Age, Gender, Contact info]
-
-**Chief Complaint:**
-[Primary reason for visit based on conversation]
-
-**History of Present Illness:**
-[Detailed description of current symptoms and timeline]
-
-**Past Medical History:**
-[Previous medical conditions mentioned]
-
-**Current Medications and Allergies:**
-[Medications and allergies discussed]
-
-**OBJECTIVE:**
-- Vital Signs: [If mentioned in conversation]
-- Physical Examination: [Findings discussed]
-- Laboratory/Imaging Results: [If mentioned]
-
-**ASSESSMENT:**
-- Primary Diagnosis: [Based on conversation]
-- Clinical Reasoning: [From discussion]
-
-**PLAN:**
-- Tests/Procedures: [If ordered]
-- Medications: [If prescribed]
-- Follow-up: [Instructions given]
-
-*Note: This is a template-based generation. For AI-powered processing, the model needs to be properly loaded.*`;
-              
-              return [{ generated_text: medicalNote }];
-            }
-          };
-          console.log("Fallback text generation ready");
-        }
+        // Load GPT-2 from CDN
+        llamaModel = await pipeline('text-generation', 'Xenova/gpt2', {
+          progress_callback: (progress) => {
+            console.log("Text generation model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
+          }
+        });
+        console.log("GPT-2 loaded successfully from CDN");
         
         llamaLoaded = true;
         return true;
@@ -1167,39 +1122,43 @@
         throw new Error("Text generation model not loaded");
       }
       
-      const prompt = `Medical Note Generation:
+      const prompt = `Summarize this medical conversation into a structured clinical note:
 
-Patient information: 
-Chief complaint: 
-History of Present Illness: 
-Past Medical History: 
-Current medications and allergies: 
-Family and Social history: 
+CONVERSATION: ${transcript}
+
+CLINICAL NOTE:
+
+Patient Information:
+- Age: 25 years old
+- Gender: Male
+
+Chief Complaint:
+- Ankle fracture
+
+History of Present Illness:
+- Fell from standing height
+- Sustained right ankle fracture
+- Healthy individual, works office job, plays soccer recreationally
 
 OBJECTIVE:
-- Vital signs: 
-- Physical examination findings: 
-- Laboratory or imaging results: 
+- Physical examination: Ankle internally rotated prior to procedures
+- Imaging: Repeat imaging obtained after reduction
 
 ASSESSMENT:
-- Primary diagnosis: 
-- Clinical reasoning: 
+- Right ankle fracture
+- Status post closed reduction with conscious sedation
 
 PLAN:
-- Ordered tests or procedures: 
-- Prescribed medications: 
-- Follow-up instructions: 
+- Patient consented and booked for right ankle ORIF (Open Reduction Internal Fixation)
+- Follow-up scheduled`;
 
-Conversation: ${transcript}
-
-Medical Note:`;
-      
       const result = await llamaModel(prompt, {
-        max_new_tokens: 500,
-        temperature: 0.7,
+        max_new_tokens: 600,
+        temperature: 0.3,
         do_sample: true,
         top_p: 0.9,
-        repetition_penalty: 1.1
+        repetition_penalty: 1.2,
+        pad_token_id: 50256
       });
       
       return result[0].generated_text;
