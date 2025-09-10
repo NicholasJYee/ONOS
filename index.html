@@ -617,13 +617,13 @@
         
         console.log("Initializing text generation pipeline...");
         
-        // Load GPT-2 from CDN
-        llamaModel = await pipeline('text-generation', 'Xenova/gpt2', {
+        // Load Qwen1.5-1.8B-Chat from CDN
+        llamaModel = await pipeline('text-generation', 'Xenova/Qwen1.5-1.8B-Chat', {
           progress_callback: (progress) => {
             console.log("Text generation model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
           }
         });
-        console.log("GPT-2 loaded successfully from CDN");
+        console.log("Qwen1.5-1.8B-Chat loaded successfully from CDN");
         
         llamaLoaded = true;
         return true;
@@ -729,15 +729,15 @@
           await loadWhisperFallback();
         }
         
-        // Load Llama model for medical note generation
-        updateProgress(40, "Loading GPT-2 for text generation...");
-        console.log("Loading GPT-2 model...");
+        // Load Qwen model for medical note generation
+        updateProgress(40, "Loading Qwen1.5-1.8B-Chat for text generation...");
+        console.log("Loading Qwen1.5-1.8B-Chat model...");
         
         try {
           await loadLlamaModel();
-          console.log("GPT-2 model loaded successfully");
+          console.log("Qwen1.5-1.8B-Chat model loaded successfully");
         } catch (error) {
-          console.warn("GPT-2 model loading failed:", error);
+          console.warn("Qwen1.5-1.8B-Chat model loading failed:", error);
         }
         
         console.log("Whisper library loaded, initializing model...");
@@ -794,7 +794,7 @@
         }
         
         if (!llamaModel) {
-          console.warn("Llama model failed to load, medical note generation will not be available");
+          console.warn("Qwen model failed to load, medical note generation will not be available");
         }
         
         console.log("Whisper model loaded successfully");
@@ -1116,55 +1116,154 @@
       }
     };
 
+    // System message for medical note generation
+    const SYSTEM_MESSAGE = `You are a medical scribe assistant. Convert the following doctor-patient conversation into a structured medical note following the clinical note format. Only include sections where relevant information is explicitly mentioned in the conversation. Each section should only appear if there is specific information for it.
+
+Available sections and their components:
+
+- Patient information (Name, Age, Gender, Address, Contact information)
+- Chief complaint (CC) or duration of follow-up
+- History of Present Illness (HPI)
+- Review of Systems (ROS) relevant to the complaint
+- Past Medical History (PMHx)
+- Current medications and allergies
+- Family and Social history
+
+OBJECTIVE - Include only if physical findings/measurements are mentioned:
+- Vital signs
+- Physical examination findings
+- Laboratory or imaging results
+- Observable measurements or data
+
+ASSESSMENT - Include only if diagnoses/interpretations are discussed:
+- Primary diagnosis or differential diagnoses
+- Clinical reasoning and interpretation
+- Status of conditions
+
+PLAN - Include only if future actions are specified:
+- Ordered tests or procedures
+- Prescribed medications or treatments
+- Referrals or consultations
+- Follow-up instructions
+- Patient education
+
+Important:
+- Only include sections that have explicit information from the conversation
+- Omit any section entirely if no relevant information was discussed
+- Do not include placeholder text or assumptions
+- Do not include any pre-amble or commentary`;
+
+    // Cleaning instructions for note formatting
+    const CLEANING_INSTRUCTIONS = `Please clean the following medical note by:
+1. Removing any sections marked with [Incomplete]
+2. Removing any preamble or commentary before 'Patient information'
+3. Ensuring the note starts with 'Patient information'
+4. Maintaining the clinical note format structure
+5. Only including sections with actual content
+
+If the note doesn't start with 'Patient information' or contains [Incomplete] sections, please regenerate it following these requirements.`;
+
     // Medical note generation function
     async function generateMedicalNote(transcript) {
       if (!llamaModel) {
         throw new Error("Text generation model not loaded");
       }
       
-      const prompt = `Summarize this medical conversation into a structured clinical note:
-
-CONVERSATION: ${transcript}
-
-CLINICAL NOTE:
-
-Patient Information:
-- Age: 25 years old
-- Gender: Male
-
-Chief Complaint:
-- Ankle fracture
-
-History of Present Illness:
-- Fell from standing height
-- Sustained right ankle fracture
-- Healthy individual, works office job, plays soccer recreationally
-
-OBJECTIVE:
-- Physical examination: Ankle internally rotated prior to procedures
-- Imaging: Repeat imaging obtained after reduction
-
-ASSESSMENT:
-- Right ankle fracture
-- Status post closed reduction with conscious sedation
-
-PLAN:
-- Patient consented and booked for right ankle ORIF (Open Reduction Internal Fixation)
-- Follow-up scheduled`;
-
+      const prompt = `${SYSTEM_MESSAGE}\n\nConversation:\n${transcript}`;
+      
       const result = await llamaModel(prompt, {
-        max_new_tokens: 600,
-        temperature: 0.3,
+        max_new_tokens: 800,
+        temperature: 0.1,
         do_sample: true,
         top_p: 0.9,
-        repetition_penalty: 1.2,
+        repetition_penalty: 1.1,
         pad_token_id: 50256
       });
       
       return result[0].generated_text;
     }
 
-    // Auto-generate medical note from transcript
+    // Clean the generated note to ensure proper format
+    async function cleanNote(note) {
+      if (!llamaModel) {
+        return note; // Return original if model not available
+      }
+      
+      const prompt = `${CLEANING_INSTRUCTIONS}\n\nNote to clean:\n${note}`;
+      
+      try {
+        const result = await llamaModel(prompt, {
+          max_new_tokens: 600,
+          temperature: 0.1,
+          do_sample: true,
+          top_p: 0.9,
+          repetition_penalty: 1.2,
+          pad_token_id: 50256
+        });
+        
+        let cleanedNote = result[0].generated_text;
+        
+        // Strip formatting from the start of the note
+        cleanedNote = cleanedNote.trim();
+        if (cleanedNote.startsWith('```plaintext')) {
+          cleanedNote = cleanedNote.substring(12).trim();
+        } else if (cleanedNote.startsWith('```')) {
+          cleanedNote = cleanedNote.substring(3).trim();
+        }
+        
+        // Find and extract content starting from "Patient information"
+        const patientInfoIndex = cleanedNote.toLowerCase().indexOf("patient information");
+        if (patientInfoIndex > 0) {
+          const nextChars = cleanedNote.substring(patientInfoIndex + 16, patientInfoIndex + 20);
+          if (nextChars.includes('**')) {
+            cleanedNote = '**' + cleanedNote.substring(patientInfoIndex);
+          } else {
+            cleanedNote = cleanedNote.substring(patientInfoIndex);
+          }
+        }
+        
+        // Check for issues and provide feedback
+        const issues = [];
+        const normalizedStart = cleanedNote.trim().toLowerCase()
+          .replace(/\*/g, '').replace(/#/g, '').replace(/\*\*/g, '').replace(/_/g, '');
+        
+        if (!normalizedStart.startsWith("patient information")) {
+          issues.push(`The note starts with '${cleanedNote.substring(0, 50)}...' instead of 'Patient information'`);
+        }
+        
+        if (cleanedNote.includes("[Incomplete]")) {
+          const incompleteSections = cleanedNote.split('\n').filter(line => line.includes("[Incomplete]"));
+          issues.push(`The following sections are marked as incomplete: ${incompleteSections.join(', ')}`);
+        }
+        
+        // If issues found, try to fix them
+        if (issues.length > 0) {
+          console.log(`Found issues in note: ${issues.join('; ')}`);
+          const feedbackMessage = `Please fix the following issues in the note:\n${issues.join('\n')}\n\nHere is the current note:\n${cleanedNote}`;
+          
+          const feedbackPrompt = `${CLEANING_INSTRUCTIONS}\n\n${feedbackMessage}`;
+          
+          const feedbackResult = await llamaModel(feedbackPrompt, {
+            max_new_tokens: 600,
+            temperature: 0.1,
+            do_sample: true,
+            top_p: 0.9,
+            repetition_penalty: 1.2,
+            pad_token_id: 50256
+          });
+          
+          cleanedNote = feedbackResult[0].generated_text.trim();
+        }
+        
+        return cleanedNote;
+        
+      } catch (error) {
+        console.error("Error cleaning note:", error);
+        return note; // Return original note if cleaning fails
+      }
+    }
+
+    // Auto-generate medical note from transcript with cleaning pipeline
     async function generateMedicalNoteFromTranscript(transcript) {
       if (!transcript || transcript.trim() === '') {
         showError("No transcript to process");
@@ -1180,13 +1279,19 @@ PLAN:
         updateStatus("Generating clinical note...");
         output.textContent = "Generating clinical note...";
         
+        // Step 1: Generate the initial medical note
         const medicalNote = await generateMedicalNote(transcript);
+        console.log("Generated note:", medicalNote);
         
-        // Extract the medical note from the response (remove the prompt)
-        const noteStart = medicalNote.indexOf("Patient information");
-        const cleanNote = noteStart > -1 ? medicalNote.substring(noteStart) : medicalNote;
+        updateStatus("Cleaning clinical note...");
+        output.textContent = "Cleaning clinical note...";
         
-        output.textContent = cleanNote;
+        // Step 2: Clean the note to ensure proper format
+        const cleanedNote = await cleanNote(medicalNote);
+        console.log("Cleaned note:", cleanedNote);
+        
+        // Step 3: Display the final cleaned note
+        output.textContent = cleanedNote;
         updateStatus("Clinical note generated successfully!");
         
       } catch (error) {
