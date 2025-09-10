@@ -24,11 +24,26 @@
     
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 1400px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 30px;
+    }
+    
+    .main-content {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
     }
     
     .header {
@@ -50,6 +65,24 @@
     }
     
     .output-container {
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .transcript-container {
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .medical-note-container {
       width: 100%;
       background: white;
       border-radius: 16px;
@@ -115,6 +148,26 @@
     }
     
     #output:empty:before {
+      content: "Medical note will appear here...";
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    #transcript {
+      padding: 20px;
+      min-height: 200px;
+      font-size: 1rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: inherit;
+      background: #f8f9fa;
+      border: none;
+      outline: none;
+      resize: none;
+    }
+    
+    #transcript:empty:before {
       content: "Transcribed text will appear here...";
       color: #6c757d;
       font-style: italic;
@@ -342,7 +395,7 @@
         font-size: 0.8rem;
       }
       
-      #output {
+      #output, #transcript, #processing {
         padding: 15px;
         min-height: 150px;
         font-size: 0.95rem;
@@ -374,15 +427,39 @@
       <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Click the microphone to start recording</p>
     </div>
     
-    <div class="output-container">
-      <div class="output-header">
-        <h3 class="output-title">Transcription</h3>
-        <button class="copy-btn" id="copyBtn">
-          <span>📋</span>
-          <span id="copyText">Copy</span>
-        </button>
+    <div class="main-content">
+      <div class="transcript-container">
+        <div class="output-header">
+          <h3 class="output-title">Transcription</h3>
+          <button class="copy-btn" id="copyTranscriptBtn">
+            <span>📋</span>
+            <span id="copyTranscriptText">Copy</span>
+          </button>
+        </div>
+        <div id="transcript"></div>
       </div>
-      <div id="output" contenteditable="true"></div>
+      
+      <div class="medical-note-container">
+        <div class="output-header">
+          <h3 class="output-title">Medical Note</h3>
+          <button class="copy-btn" id="copyBtn">
+            <span>📋</span>
+            <span id="copyText">Copy</span>
+          </button>
+        </div>
+        <div id="output" contenteditable="true"></div>
+      </div>
+      
+      <div class="output-container">
+        <div class="output-header">
+          <h3 class="output-title">Processing</h3>
+          <button class="copy-btn" id="processBtn">
+            <span>🔄</span>
+            <span id="processText">Process</span>
+          </button>
+        </div>
+        <div id="processing" style="padding: 20px; min-height: 200px; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; font-family: inherit; background: #f8f9fa; border: none; outline: none; resize: none;"></div>
+      </div>
     </div>
     
     <div class="record-section">
@@ -412,16 +489,18 @@
     // Transformers.js implementation (works on GitHub Pages)
     let whisper = null;
     let whisperLoaded = false;
+    let llamaModel = null;
+    let llamaLoaded = false;
     
     async function loadWhisperTransformers() {
       try {
-        console.log("Loading Whisper with Transformers.js...");
+        console.log("Loading Whisper with Xenova Transformers.js...");
         
-        // Import Transformers.js
-        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest/dist/transformers.min.js');
+        // Import Xenova Transformers.js (better for Whisper)
+        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
         
         console.log("Initializing Whisper pipeline...");
-        whisper = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+        whisper = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
           quantized: true,
           progress_callback: (progress) => {
             console.log("Model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
@@ -532,15 +611,94 @@
       return true;
     }
     
+    // Load text generation model
+    async function loadLlamaModel() {
+      try {
+        console.log("Loading text generation model...");
+        
+        // Import Xenova Transformers.js
+        const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@latest');
+        
+        console.log("Initializing text generation pipeline...");
+        
+        try {
+          // Try to load GPT-2 from CDN
+          llamaModel = await pipeline('text-generation', 'Xenova/gpt2', {
+            progress_callback: (progress) => {
+              console.log("Text generation model loading progress:", Math.round(progress.loaded / progress.total * 100) + "%");
+            }
+          });
+          console.log("GPT-2 loaded successfully from CDN");
+        } catch (modelError) {
+          console.log("GPT-2 CDN loading failed, using fallback...");
+          // Create a fallback text generation function
+          llamaModel = {
+            generate: async (prompt, options = {}) => {
+              const transcript = prompt.split('Conversation: ')[1] || '';
+              
+              // Simple but effective medical note template
+              const medicalNote = `**Patient Information:**
+[Extract from conversation: Name, Age, Gender, Contact info]
+
+**Chief Complaint:**
+[Primary reason for visit based on conversation]
+
+**History of Present Illness:**
+[Detailed description of current symptoms and timeline]
+
+**Past Medical History:**
+[Previous medical conditions mentioned]
+
+**Current Medications and Allergies:**
+[Medications and allergies discussed]
+
+**OBJECTIVE:**
+- Vital Signs: [If mentioned in conversation]
+- Physical Examination: [Findings discussed]
+- Laboratory/Imaging Results: [If mentioned]
+
+**ASSESSMENT:**
+- Primary Diagnosis: [Based on conversation]
+- Clinical Reasoning: [From discussion]
+
+**PLAN:**
+- Tests/Procedures: [If ordered]
+- Medications: [If prescribed]
+- Follow-up: [Instructions given]
+
+*Note: This is a template-based generation. For AI-powered processing, the model needs to be properly loaded.*`;
+              
+              return [{ generated_text: medicalNote }];
+            }
+          };
+          console.log("Fallback text generation ready");
+        }
+        
+        llamaLoaded = true;
+        return true;
+        
+      } catch (error) {
+        console.error("Failed to load text generation model:", error);
+        return false;
+      }
+    }
+
     // Make functions available globally
     window.loadWhisperTransformers = loadWhisperTransformers;
     window.loadWhisperFallback = loadWhisperFallback;
+    window.loadLlamaModel = loadLlamaModel;
   </script>
   <script>
     const recordBtn = document.getElementById("recordBtn");
     const output = document.getElementById("output");
+    const transcript = document.getElementById("transcript");
+    const processing = document.getElementById("processing");
     const copyBtn = document.getElementById("copyBtn");
     const copyText = document.getElementById("copyText");
+    const copyTranscriptBtn = document.getElementById("copyTranscriptBtn");
+    const copyTranscriptText = document.getElementById("copyTranscriptText");
+    const processBtn = document.getElementById("processBtn");
+    const processText = document.getElementById("processText");
     const statusText = document.getElementById("statusText");
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
@@ -549,6 +707,7 @@
     let mediaRecorder, audioChunks = [], isRecording = false;
     let whisperModel;
     let modelLoading = false;
+    let currentTranscript = "";
 
     function updateStatus(message, isError = false) {
       statusText.textContent = message;
@@ -578,15 +737,15 @@
     function simulateProgress() {
       let progress = 0;
       const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
+        progress += Math.random() * 10;
+        if (progress > 85) progress = 85;
         
-        updateProgress(progress, `Downloading AI model... ${Math.round(progress)}%`);
+        updateProgress(progress, `Loading AI models... ${Math.round(progress)}%`);
         
-        if (whisperModel || progress >= 90) {
+        if ((whisperModel && llamaModel) || progress >= 85) {
           clearInterval(interval);
-          if (whisperModel) {
-            updateProgress(100, "Model loaded successfully!");
+          if (whisperModel && llamaModel) {
+            updateProgress(100, "Models loaded successfully!");
             setTimeout(() => {
               showProgress(false);
               updateStatus("Ready to record");
@@ -624,6 +783,17 @@
           await loadWhisperFallback();
         }
         
+        // Load Llama model for medical note generation
+        updateProgress(40, "Loading GPT-2 for text generation...");
+        console.log("Loading GPT-2 model...");
+        
+        try {
+          await loadLlamaModel();
+          console.log("GPT-2 model loaded successfully");
+        } catch (error) {
+          console.warn("GPT-2 model loading failed:", error);
+        }
+        
         console.log("Whisper library loaded, initializing model...");
         updateProgress(50, "Initializing model...");
         
@@ -642,7 +812,12 @@
                   const audioBlob = new Blob([audioData], { type: 'audio/webm' });
                   const audioUrl = URL.createObjectURL(audioBlob);
                   
-                  const result = await whisper(audioUrl);
+                  const result = await whisper(audioUrl, {
+                    chunk_length_s: 30,
+                    stride_length_s: 5,
+                    return_timestamps: false,
+                    language: 'en'
+                  });
                   console.log("Transcription result:", result);
                   
                   // Clean up
@@ -667,9 +842,13 @@
         // Clear the simulation interval
         clearInterval(progressInterval);
         
-        // Validate that the model is properly loaded
+        // Validate that the models are properly loaded
         if (!whisperModel) {
-          throw new Error("Model failed to load");
+          throw new Error("Whisper model failed to load");
+        }
+        
+        if (!llamaModel) {
+          console.warn("Llama model failed to load, medical note generation will not be available");
         }
         
         console.log("Whisper model loaded successfully");
@@ -815,19 +994,17 @@
               }
             }
             
-            console.log("Setting output text to:", transcription.text);
-            console.log("Output element before setting text:", output.textContent);
-            console.log("Output element innerHTML before:", output.innerHTML);
+            console.log("Setting transcript text to:", transcription.text);
+            console.log("Transcript element before setting text:", transcript.textContent);
             
-            // Try multiple ways to set the text
-            output.textContent = transcription.text;
-            output.innerHTML = transcription.text;
+            // Set the transcript text
+            currentTranscript = transcription.text;
+            transcript.textContent = transcription.text;
             
-            console.log("Output element after setting text:", output.textContent);
-            console.log("Output element innerHTML after:", output.innerHTML);
-            console.log("Output element visible:", output.offsetHeight > 0);
+            console.log("Transcript element after setting text:", transcript.textContent);
+            console.log("Transcript element visible:", transcript.offsetHeight > 0);
             recordBtn.classList.remove("processing");
-            updateStatus("Transcription complete");
+            updateStatus("Transcription complete - Click Process to generate medical note");
             
             // Auto-scroll to bottom
             output.scrollTop = output.scrollHeight;
@@ -983,6 +1160,89 @@
       }
     };
 
+    // Medical note generation function
+    async function generateMedicalNote(transcript) {
+      if (!llamaModel) {
+        throw new Error("Text generation model not loaded");
+      }
+      
+      const prompt = `Medical Note Generation:
+
+Patient information: 
+Chief complaint: 
+History of Present Illness: 
+Past Medical History: 
+Current medications and allergies: 
+Family and Social history: 
+
+OBJECTIVE:
+- Vital signs: 
+- Physical examination findings: 
+- Laboratory or imaging results: 
+
+ASSESSMENT:
+- Primary diagnosis: 
+- Clinical reasoning: 
+
+PLAN:
+- Ordered tests or procedures: 
+- Prescribed medications: 
+- Follow-up instructions: 
+
+Conversation: ${transcript}
+
+Medical Note:`;
+      
+      const result = await llamaModel(prompt, {
+        max_new_tokens: 500,
+        temperature: 0.7,
+        do_sample: true,
+        top_p: 0.9,
+        repetition_penalty: 1.1
+      });
+      
+      return result[0].generated_text;
+    }
+
+    // Process button click handler
+    processBtn.onclick = async () => {
+      if (!currentTranscript || currentTranscript.trim() === '') {
+        showError("No transcript to process");
+        return;
+      }
+      
+      if (!llamaModel) {
+        showError("Medical note model not loaded");
+        return;
+      }
+      
+      try {
+        processBtn.classList.add("loading");
+        processText.textContent = "Processing...";
+        processing.textContent = "Generating medical note...";
+        
+        const medicalNote = await generateMedicalNote(currentTranscript);
+        
+        // Extract the medical note from the response (remove the prompt)
+        const noteStart = medicalNote.indexOf("Patient information");
+        const cleanNote = noteStart > -1 ? medicalNote.substring(noteStart) : medicalNote;
+        
+        output.textContent = cleanNote;
+        processing.textContent = "Medical note generated successfully!";
+        
+        processBtn.classList.remove("loading");
+        processText.textContent = "Process";
+        updateStatus("Medical note generated");
+        
+      } catch (error) {
+        console.error("Error generating medical note:", error);
+        processBtn.classList.remove("loading");
+        processText.textContent = "Process";
+        processing.textContent = `Error: ${error.message}`;
+        showError(`Failed to generate medical note: ${error.message}`);
+      }
+    };
+
     copyBtn.onclick = async () => {
       try {
         const text = output.textContent;
@@ -1003,6 +1263,29 @@
       } catch (error) {
         console.error("Error copying text:", error);
         showError("Failed to copy text");
+      }
+    };
+
+    copyTranscriptBtn.onclick = async () => {
+      try {
+        const text = transcript.textContent;
+        if (!text || text.trim() === '') {
+          showError("No transcript to copy");
+          return;
+        }
+        
+        await navigator.clipboard.writeText(text);
+        copyTranscriptBtn.classList.add("copied");
+        copyTranscriptText.textContent = "Copied!";
+        
+        setTimeout(() => {
+          copyTranscriptBtn.classList.remove("copied");
+          copyTranscriptText.textContent = "Copy";
+        }, 2000);
+        
+      } catch (error) {
+        console.error("Error copying transcript:", error);
+        showError("Failed to copy transcript");
       }
     };
 
